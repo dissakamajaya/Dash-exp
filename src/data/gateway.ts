@@ -39,7 +39,7 @@ export const DESTINATIONS: Destination[] = [
   { id: "finance", name: "Finance", shapeIndex: 1, accent: "#f472b6", route: "/finance", url: "https://finance.houseofexp.com/", cue: "tick" },
   { id: "rental", name: "Rental", shapeIndex: 2, accent: "#38bdf8", route: "/rental", url: "https://rental.houseofexp.com/", comingSoon: true, cue: "droplet" },
   { id: "admin", name: "Website Admin", shapeIndex: 3, accent: "#fb923c", route: "/website-admin", url: "https://houseofexp.com/edit/", cue: "page" },
-  { id: "client", name: "Client Portal", shapeIndex: 4, accent: "#2dd4bf", route: "/client-portal", url: "https://client.houseofexp.com/", cue: "bloom" },
+  { id: "client", name: "Client Portal", shapeIndex: 4, accent: "#2dd4bf", route: "/client-portal", url: "https://client.houseofexp.com/admin", cue: "bloom" },
   { id: "academy", name: "Academy", shapeIndex: 5, accent: "#facc15", route: "/academy", url: "https://academy.houseofexp.com/", comingSoon: true, cue: "chime" },
 ];
 
