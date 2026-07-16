@@ -2,8 +2,12 @@ import { AuthFailure, STAFF_NAMES, staffIdentity, type StaffId, type StaffIdenti
 
 const COOKIE_NAME = "hox_local_session";
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
+const MIN_ITERATIONS = 100_000;
+const MAX_ITERATIONS = 1_000_000;
 const DEFAULT_ITERATIONS = 310_000;
+const SALT_BYTES = 16;
 const DERIVED_BITS = 256;
+const DERIVED_BYTES = DERIVED_BITS / 8;
 const encoder = new TextEncoder();
 
 type PasswordVerifier = {
@@ -33,6 +37,7 @@ function base64UrlEncode(bytes: Uint8Array): string {
 }
 
 function base64UrlDecode(value: string): Uint8Array<ArrayBuffer> {
+  if (!/^[A-Za-z0-9_-]+$/.test(value) || value.length % 4 === 1) throw new Error("Invalid base64url value.");
   const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(value.length / 4) * 4, "=");
   const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
@@ -65,7 +70,7 @@ async function hmac(data: string, secret: string): Promise<Uint8Array> {
   return new Uint8Array(signature);
 }
 
-function assertLocalEndpoint(request: Request, env: WorkerEnv): void {
+export function assertLocalEndpoint(request: Request, env: WorkerEnv): void {
   const hostname = new URL(request.url).hostname;
   const localhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "[::1]";
   if (env.ENVIRONMENT !== "local" || env.AUTH_MODE !== "local" || !localhost) {
@@ -77,7 +82,23 @@ function parseVerifier(value: unknown): PasswordVerifier | null {
   if (!isRecord(value)) return null;
   if (!isStaffId(value.staffId)) return null;
   if (typeof value.salt !== "string" || typeof value.hash !== "string") return null;
-  if (typeof value.iterations !== "number" || !Number.isSafeInteger(value.iterations) || value.iterations < 100_000) return null;
+  if (
+    typeof value.iterations !== "number" ||
+    !Number.isSafeInteger(value.iterations) ||
+    value.iterations < MIN_ITERATIONS ||
+    value.iterations > MAX_ITERATIONS
+  ) {
+    return null;
+  }
+  let salt: Uint8Array;
+  let hash: Uint8Array;
+  try {
+    salt = base64UrlDecode(value.salt);
+    hash = base64UrlDecode(value.hash);
+  } catch {
+    return null;
+  }
+  if (salt.length !== SALT_BYTES || hash.length !== DERIVED_BYTES) return null;
   return { staffId: value.staffId, salt: value.salt, iterations: value.iterations, hash: value.hash };
 }
 

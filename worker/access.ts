@@ -37,6 +37,19 @@ function remoteJwks(issuer: string): JWTVerifyGetKey {
   return jwks;
 }
 
+function isJwksServiceFailure(error: errors.JOSEError): boolean {
+  if (
+    error.code === "ERR_JWKS_TIMEOUT" ||
+    error.code === "ERR_JWKS_INVALID" ||
+    error.code === "ERR_JWKS_MULTIPLE_MATCHING_KEYS" ||
+    error.code === "ERR_JWK_INVALID" ||
+    error.code === "ERR_JOSE_NOT_SUPPORTED"
+  ) {
+    return true;
+  }
+  return error.code === "ERR_JOSE_GENERIC" && /JSON Web Key Set|JWKS|JWK|200 OK/i.test(error.message);
+}
+
 export async function getAccessIdentity(request: Request, env: WorkerEnv): Promise<StaffIdentity> {
   if (env.ENVIRONMENT === "production" && env.AUTH_MODE === "local") {
     throw new AuthFailure(503, "local_mode_in_production", "Local auth mode is not available in production.");
@@ -61,9 +74,12 @@ export async function getAccessIdentity(request: Request, env: WorkerEnv): Promi
     payloadEmail = typeof payload.email === "string" ? normalizeEmail(payload.email) : null;
   } catch (error) {
     if (error instanceof errors.JOSEError) {
+      if (isJwksServiceFailure(error)) {
+        throw new AuthFailure(503, "access_jwks_unavailable", "Cloudflare Access JWKS is unavailable.");
+      }
       throw new AuthFailure(401, "invalid_access_assertion", "Invalid Cloudflare Access assertion.");
     }
-    throw error;
+    throw new AuthFailure(503, "access_jwks_unavailable", "Cloudflare Access JWKS is unavailable.");
   }
 
   if (!payloadEmail) {

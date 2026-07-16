@@ -1,5 +1,5 @@
 import { getAccessIdentity } from "./access";
-import { clearLocalSessionCookie, getLocalIdentity, verifyLocalLogin } from "./local-auth";
+import { assertLocalEndpoint, clearLocalSessionCookie, getLocalIdentity, verifyLocalLogin } from "./local-auth";
 import { AuthFailure, publicSession, type PublicSession, type StaffId, type WorkerEnv } from "./types";
 
 type SessionResponse = PublicSession | { error: string; message: string };
@@ -48,6 +48,7 @@ async function handleSession(request: Request, env: WorkerEnv): Promise<Response
 }
 
 async function handleLocalLogin(request: Request, env: WorkerEnv): Promise<Response> {
+  assertLocalEndpoint(request, env);
   if (request.method !== "POST") return jsonResponse({ error: "method_not_allowed", message: "Method not allowed." }, 405);
   const body = await readLoginBody(request);
   if (!body) return jsonResponse({ error: "invalid_login_body", message: "Invalid login request." }, 400);
@@ -56,13 +57,8 @@ async function handleLocalLogin(request: Request, env: WorkerEnv): Promise<Respo
 }
 
 function handleLocalLogout(request: Request, env: WorkerEnv): Response {
+  assertLocalEndpoint(request, env);
   if (request.method !== "POST") return jsonResponse({ error: "method_not_allowed", message: "Method not allowed." }, 405);
-  if (env.ENVIRONMENT !== "local" || env.AUTH_MODE !== "local") {
-    throw new AuthFailure(404, "local_auth_unavailable", "Local auth is not available.");
-  }
-  const hostname = new URL(request.url).hostname;
-  const localhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "[::1]";
-  if (!localhost) throw new AuthFailure(404, "local_auth_unavailable", "Local auth is not available.");
   return new Response(null, {
     status: 204,
     headers: { "Set-Cookie": clearLocalSessionCookie(), "Cache-Control": "no-store" },

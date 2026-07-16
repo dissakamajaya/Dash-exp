@@ -52,8 +52,13 @@ function readRoute() {
   return window.location.hash.slice(1).split("?")[0] || "/";
 }
 
-function isLocalHostname() {
-  return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "::1";
+export function shouldOfferLocalLogin(hostname: string, session: Session | null, authError: SessionError | null): boolean {
+  const localhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+  return (
+    localhost &&
+    !session &&
+    (authError?.code === "local_session_required" || authError?.code === "invalid_local_login")
+  );
 }
 
 function sessionError(error: unknown): SessionError {
@@ -82,7 +87,7 @@ export default function App() {
   const selectedIndices = [selectedApp?.shapeIndex, selectedUser?.shapeIndex].filter(
     (value): value is number => value !== undefined,
   );
-  const localLoginAvailable = isLocalHostname() && !session && (!authError || authError.status === 401);
+  const localLoginAvailable = shouldOfferLocalLogin(window.location.hostname, session, authError);
   const blockedByAuth = !authLoading && !session && authError && !localLoginAvailable;
 
   useEffect(() => {
@@ -130,8 +135,8 @@ export default function App() {
   }, []);
 
   const selectItem = (item: SelectorItem) => {
-    if (item.kind === "user" && session) return;
     play(item.cue);
+    if (item.kind === "user" && session) return;
     setAuthError((current) => (current?.code === "invalid_local_login" ? null : current));
     setSelection((current) => {
       if (item.kind === "destination") return { ...current, appId: item.id };
@@ -180,7 +185,40 @@ export default function App() {
     }
   };
 
-  if (routeApp) {
+  if (authLoading || blockedByAuth) {
+    const visibleAuthError = authError ?? new SessionError(500, "session_request_failed", "Session request failed.");
+    const accentStyle: AccentStyle = { "--accent": activeAccent };
+    const title = authLoading ? "Memeriksa sesi" : visibleAuthError.status === 503 ? "Konfigurasi belum lengkap" : "Akses ditolak";
+    const message = authLoading
+      ? "Gateway sedang memvalidasi identitas."
+      : visibleAuthError.message;
+
+    return (
+      <div className="relative min-h-screen w-full transition-colors duration-500" style={accentStyle}>
+        <AnimatedBackground accent={activeAccent} dark={dark} />
+        <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
+        <main className="relative z-10 flex min-h-screen items-center justify-center px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <h1
+              className="text-4xl font-medium tracking-[-0.04em] sm:text-6xl"
+              style={{ color: dark ? "#fff" : "#171717" }}
+            >
+              {title}
+            </h1>
+            <p className="mt-4 max-w-sm text-sm" style={{ color: dark ? "rgba(255,255,255,.52)" : "rgba(0,0,0,.52)" }}>
+              {message}
+            </p>
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
+
+  if (routeApp && session) {
     const accentStyle: AccentStyle = { "--accent": routeApp.accent };
 
     return (
@@ -220,39 +258,6 @@ export default function App() {
             >
               Kembali
             </button>
-          </motion.div>
-        </main>
-      </div>
-    );
-  }
-
-  if (authLoading || blockedByAuth) {
-    const visibleAuthError = authError ?? new SessionError(500, "session_request_failed", "Session request failed.");
-    const accentStyle: AccentStyle = { "--accent": activeAccent };
-    const title = authLoading ? "Memeriksa sesi" : visibleAuthError.status === 503 ? "Konfigurasi belum lengkap" : "Akses ditolak";
-    const message = authLoading
-      ? "Gateway sedang memvalidasi identitas."
-      : visibleAuthError.message;
-
-    return (
-      <div className="relative min-h-screen w-full transition-colors duration-500" style={accentStyle}>
-        <AnimatedBackground accent={activeAccent} dark={dark} />
-        <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
-        <main className="relative z-10 flex min-h-screen items-center justify-center px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <h1
-              className="text-4xl font-medium tracking-[-0.04em] sm:text-6xl"
-              style={{ color: dark ? "#fff" : "#171717" }}
-            >
-              {title}
-            </h1>
-            <p className="mt-4 max-w-sm text-sm" style={{ color: dark ? "rgba(255,255,255,.52)" : "rgba(0,0,0,.52)" }}>
-              {message}
-            </p>
           </motion.div>
         </main>
       </div>
