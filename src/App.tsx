@@ -196,25 +196,6 @@ export default function App() {
             dark={dark}
           />
 
-          <AnimatePresence mode="wait">
-            {!(selectedApp && selectedUser) && (
-              <motion.p
-                key={selectedApp ? "pick-user" : selectedUser ? "pick-app" : "pick-both"}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.35 }}
-                className="mt-5 text-center text-xs tracking-wide"
-                style={{ color: dark ? "rgba(255,255,255,.4)" : "rgba(0,0,0,.42)" }}
-              >
-                {selectedApp
-                  ? "Sekarang pilih siapa kamu"
-                  : selectedUser
-                    ? "Sekarang pilih aplikasi tujuan"
-                    : "Pilih aplikasi & siapa kamu untuk masuk"}
-              </motion.p>
-            )}
-          </AnimatePresence>
 
           <AnimatePresence mode="wait">
             {selectedApp && selectedUser && (
