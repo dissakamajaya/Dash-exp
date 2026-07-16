@@ -104,7 +104,7 @@ Each value is normalized by trimming and lowercasing. Aliases and plus-address v
 
 Every server-side validator checks:
 
-- RS256 signature against `https://<team-domain>.cloudflareaccess.com/cdn-cgi/access/certs`
+- RS256 signature against `https://${ACCESS_TEAM_DOMAIN}/cdn-cgi/access/certs`
 - issuer equal to the configured Access team URL
 - audience equal to that application's configured Access AUD tag
 - token expiration and not-before claims
@@ -113,6 +113,8 @@ Every server-side validator checks:
 The origin reads `Cf-Access-Jwt-Assertion`. Browser requests may also carry `CF_Authorization`, but application authorization never trusts an unsigned `Cf-Access-Authenticated-User-Email` header or a query parameter.
 
 Access team domain and audience tags are required environment bindings. Production startup or request handling returns `503` when they are absent; it never falls back to local password mode.
+
+The shared binding names are `ACCESS_TEAM_DOMAIN`, `ACCESS_AUDIENCE`, and the three `HOX_STAFF_*_EMAIL` values. `ACCESS_TEAM_DOMAIN` is the hostname ending in `.cloudflareaccess.com`, without a scheme. Each deployed application owns its own `ACCESS_AUDIENCE` value.
 
 ## Component Design
 
@@ -144,13 +146,16 @@ Studio's Worker becomes the authorization source for both the SPA bootstrap and 
 Finance requires both an Access edge gate and a Convex authorization boundary:
 
 - Remove `VITE_APP_PASSWORD` and local-storage sentinel authentication from production.
-- Add a same-origin server endpoint that validates `Cf-Access-Jwt-Assertion` and returns a short-lived Convex-compatible JWT containing the canonical staff identity.
-- Use `ConvexProviderWithAuth` to acquire and refresh that bridge token.
-- Configure Convex to verify the bridge issuer and audience.
+- Add `POST /api/auth/token`, a same-origin endpoint that validates `Cf-Access-Jwt-Assertion` and returns a five-minute Finance bridge JWT containing `sub`, `staffId`, `email`, `iss`, `aud`, `iat`, and `exp`.
+- Sign bridge tokens with RS256 using the private JWK in the server-only `FINANCE_AUTH_PRIVATE_JWK` secret and a stable `kid`.
+- Publish only the corresponding public key from `GET /api/auth/.well-known/jwks.json`; this route is public so Convex can refresh signing keys.
+- Use issuer `https://finance.houseofexp.com/api/auth` and audience `house-of-exp-finance`.
+- Configure Convex `customJwt` with that exact issuer and application ID, the public JWKS URL, and `RS256`.
+- Use `ConvexProviderWithAuth` to acquire and refresh the bridge token. Tokens stay in memory and are never written to local storage.
 - Add one `requireStaffIdentity(ctx)` helper and call it from every public query, mutation, and action before data access.
 - Keep a localhost-only server-verified password fallback for UI development; no `VITE_*` secret may participate in verification.
 
-The bridge token is short-lived, audience-restricted to Finance Convex, contains no Cloudflare cookie, and is held in memory rather than persisted as an arbitrary authentication sentinel.
+The token endpoint accepts only same-origin requests, returns `Cache-Control: no-store`, and never returns the Cloudflare assertion. The bridge narrows the credential to Finance Convex and limits replay exposure to five minutes. Convex's documented custom-JWT contract requires `kid`, `alg`, and `typ` headers plus `sub`, `iss`, and `exp` claims; `iat` supports client refresh behavior.
 
 ### Website Admin
 
@@ -168,7 +173,7 @@ Client Portal separates staff entry from external client entry:
 
 - `/` continues to support external client username/password sessions.
 - `/admin` is the gateway destination for House of EXP staff and is protected by Access.
-- Server middleware or an admin bootstrap route validates the Access JWT, maps the staff email, and creates an `admin` app session with explicit `authSource: "cloudflare-access"` provenance.
+- `GET /api/auth/access?returnTo=/admin` validates the Access JWT, maps the staff email, creates an `admin` app session with explicit `authSource: "cloudflare-access"` provenance, and redirects to the fixed same-origin `/admin` path. The handler rejects any other `returnTo` value.
 - Existing `requireAdmin` checks continue to guard admin APIs.
 - Client sessions can never be upgraded by a browser-supplied role or staff ID.
 - The API-agent service key remains a separate machine credential and is reviewed independently from browser SSO.
@@ -269,3 +274,5 @@ Finance ships last because adding real Convex authorization can expose hidden ca
 - [Validate Cloudflare Access JWTs](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/)
 - [Cloudflare Access application tokens](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/application-token/)
 - [Publish a self-hosted Access application](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app/)
+- [Convex custom JWT authentication](https://docs.convex.dev/auth/advanced/custom-jwt)
+- [Convex custom authentication integration](https://docs.convex.dev/auth/advanced/custom-auth)
