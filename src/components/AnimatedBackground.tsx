@@ -33,10 +33,10 @@ export default function AnimatedBackground({ accent, dark }: Props) {
   }, []);
 
   const palette = dark
-    ? ["#7c3aed", "#db2777", "#2563eb", "#0d9488"]
-    : ["#c4b5fd", "#f9a8d4", "#93c5fd", "#99f6e4"];
-  const base = dark ? "#06070e" : "#f4f2ef";
-  const edge = dark ? "rgba(6, 7, 14, .88)" : "rgba(244, 242, 239, .72)";
+    ? ["#7b4dff", "#ff3d9a", "#2d5bff", "#12c6c6"]
+    : ["#b9a5ff", "#ff9ec9", "#93b4ff", "#7fe3e3"];
+  const base = dark ? "#0b0b10" : "#f4f4f6";
+  const edge = dark ? "rgba(11, 11, 16, .88)" : "rgba(244, 244, 246, .72)";
   const accentAlpha = dark ? "80%" : "85%";
 
   const rootStyle: BgStyle = {
