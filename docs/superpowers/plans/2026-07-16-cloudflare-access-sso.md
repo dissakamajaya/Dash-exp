@@ -44,7 +44,7 @@
 - Produces: local-only `POST /api/session/login` body `{ staffId, password }` and `POST /api/session/logout`.
 - Consumes: Access team/audience and staff email bindings from Global Constraints.
 
-- [ ] **Step 1: Add Worker runtime and auth dependencies**
+- [x] **Step 1: Add Worker runtime and auth dependencies**
 
 Use Bun, matching the active `bun.lock`:
 
@@ -65,7 +65,7 @@ Add scripts:
 }
 ```
 
-- [ ] **Step 2: Implement fail-closed Access validation**
+- [x] **Step 2: Implement fail-closed Access validation**
 
 `worker/types.ts` owns the shared contract:
 
@@ -89,15 +89,15 @@ export interface Env {
 
 `worker/access.ts` must build a `createRemoteJWKSet` URL from `ACCESS_TEAM_DOMAIN`, call `jwtVerify` with exact issuer and audience, normalize the email claim, map it to one staff ID, and throw typed `401`, `403`, or `503` failures. Never accept a plain identity header or query parameter.
 
-- [ ] **Step 3: Implement localhost-only password sessions**
+- [x] **Step 3: Implement localhost-only password sessions**
 
 `worker/local-auth.ts` parses salted verifiers from `LOCAL_PASSWORD_VERIFIERS`, verifies the selected password with Web Crypto PBKDF2, and issues an HMAC-signed HttpOnly `hox_local_session` cookie. It must require both `ENVIRONMENT === "local"` and `AUTH_MODE === "local"`; either production or a non-local host returns `404`.
 
-- [ ] **Step 4: Serve the SPA and session API from one Worker**
+- [x] **Step 4: Serve the SPA and session API from one Worker**
 
 `worker/index.ts` routes only the three session endpoints and delegates every other request to `env.ASSETS.fetch(request)`. `wrangler.jsonc` binds `dist` assets with SPA fallback and declares `ENVIRONMENT: "production"`, `AUTH_MODE: "access"` as non-secret vars. Access and staff mappings remain secrets/configuration outside source.
 
-- [ ] **Step 5: Replace browser-claimed identity in the gateway UI**
+- [x] **Step 5: Replace browser-claimed identity in the gateway UI**
 
 `src/lib/session.ts` exports:
 
@@ -110,7 +110,7 @@ export async function logout(): Promise<void>;
 
 In production, `App.tsx` hydrates `GET /api/session`, derives `selectedUser` from the returned staff ID, prevents user-shape reassignment, removes `gateway_user` from redirects, and shows a deterministic denied/configuration state. In local mode, retain the existing selector/password experience and submit to `/api/session/login`. Preserve sound, theme, shapes, motion, coming-soon behavior, and current user edits.
 
-- [ ] **Step 6: Smoke the gateway behavior**
+- [x] **Step 6: Smoke the gateway behavior**
 
 Run:
 
@@ -143,11 +143,11 @@ Exercise local mode through the Worker, not Vite alone: correct generated passwo
 - Produces: `authenticateStaff(request, env): Promise<{ canonicalId: StaffId; memberId: "aldi" | "dissa" | "bill" }>`.
 - Produces: existing `GET /api/auth/verify` response `{ ok: true, member }` from Access identity.
 
-- [ ] **Step 1: Add `jose` and Access runtime bindings**
+- [x] **Step 1: Add `jose` and Access runtime bindings**
 
 Use the repository's package manager to add `jose`. Extend `WorkerEnv` with Access settings, `ENVIRONMENT`, and `AUTH_MODE`. Configure the Worker route `studio.houseofexp.com/api/*` so SPA and API share the Access application and origin.
 
-- [ ] **Step 2: Validate Access JWT and preserve Studio member IDs**
+- [x] **Step 2: Validate Access JWT and preserve Studio member IDs**
 
 `worker/access-auth.ts` validates issuer/audience/signature/time/email and applies:
 
@@ -161,7 +161,7 @@ const STUDIO_MEMBER_BY_STAFF = {
 
 All production `/api/*` handlers derive `authenticatedMember` from this function. `POST /api/auth/login` and `/api/auth/change-password` return `404` outside explicit local mode. `GET /api/auth/verify` remains the frontend bootstrap.
 
-- [ ] **Step 3: Remove deployed bearer-token login assumptions**
+- [x] **Step 3: Remove deployed bearer-token login assumptions**
 
 Use same-origin `/api` requests with credentials. Production `api.verify()` relies on the Access cookie/header path and no longer requires `ss2-token`. Keep the existing local JWT only when the Worker reports local mode. On logout, clear local state and navigate to `/cdn-cgi/access/logout`.
 
@@ -189,11 +189,11 @@ Confirm Access identity hydrates the correct existing member, one representative
 - Consumes: Access bindings and staff mapping from Global Constraints.
 - Produces: `requireAdmin(request, bindings): Promise<string>` returning the mapped canonical staff ID/email provenance for Access, while retaining local password sessions only in local mode.
 
-- [ ] **Step 1: Add Access validation to the existing auth seam**
+- [x] **Step 1: Add Access validation to the existing auth seam**
 
 Use the existing `jose` dependency. Split `requireAdmin` into explicit Access and local-session branches. Production tries only Access and validates the application JWT. Remove production dependency on `ADMIN_PASSWORD_HASH`; keep `SESSION_SECRET` only where existing local sessions need it.
 
-- [ ] **Step 2: Replace deployed password UX**
+- [x] **Step 2: Replace deployed password UX**
 
 `/edit/login` becomes an Access bootstrap/denied screen rather than a password form. Admin pages continue calling guarded APIs. Logout clears any native local cookie and redirects to the Access logout endpoint.
 
@@ -221,15 +221,15 @@ Verify public pages still load without Access, `/edit/*` and `/api/admin/*` requ
 - Produces: `GET /api/auth/access?returnTo=/admin`, accepting no other redirect target.
 - Preserves: existing `{ user, role: "client" }` external client sessions and root login.
 
-- [ ] **Step 1: Extend session provenance without broadening roles**
+- [x] **Step 1: Extend session provenance without broadening roles**
 
 Update `SessionPayload` to make `authSource` explicit for new staff sessions. Existing external client login writes `authSource: "password"`. `requireAdmin` still checks `role === "admin"`; no request body or query parameter can set the role.
 
-- [ ] **Step 2: Implement Access exchange and fixed redirect**
+- [x] **Step 2: Implement Access exchange and fixed redirect**
 
 `lib/access-auth.ts` validates Access JWT and maps staff. `app/api/auth/access/route.ts` creates the admin session and redirects only to `/admin`. `app/admin/page.tsx` initiates the exchange when there is no valid Access-backed admin session and renders the admin view otherwise.
 
-- [ ] **Step 3: Preserve external client behavior**
+- [x] **Step 3: Preserve external client behavior**
 
 Do not protect `/`, `/api/profile`, or client-note routes with Access. Existing client usernames/passwords, project scoping, and remember-session behavior remain unchanged. Protect `/admin*`, `/api/admin/*`, and `/api/media/upload-token` with Access plus existing app guards.
 
@@ -264,15 +264,15 @@ Verify an external client can log in at `/`, sees only assigned projects, and ca
 - Produces: `requireStaffIdentity(ctx): Promise<{ staffId: StaffId; tokenIdentifier: string }>`.
 - Consumes: `FINANCE_AUTH_PRIVATE_JWK`, Access bindings, exact issuer `https://finance.houseofexp.com/api/auth`, audience `house-of-exp-finance`.
 
-- [ ] **Step 1: Remove browser-bundled authentication secrets**
+- [x] **Step 1: Remove browser-bundled authentication secrets**
 
 Delete `VITE_APP_PASSWORD` use and the production local-storage sentinel. Add `jose` and server function typings. Local password verification occurs only in the server function during localhost development and returns a bridge token; it never compares a `VITE_*` value.
 
-- [ ] **Step 2: Implement Access-to-Convex bridge**
+- [x] **Step 2: Implement Access-to-Convex bridge**
 
 Validate the Access assertion, enforce same-origin, sign a five-minute RS256 JWT with headers `{ alg: "RS256", typ: "JWT", kid }`, and claims `{ sub, staffId, email, iss, aud, iat, exp }`. Return `Cache-Control: no-store`. The JWKS handler derives and returns only the public JWK.
 
-- [ ] **Step 3: Configure Convex custom JWT auth**
+- [x] **Step 3: Configure Convex custom JWT auth**
 
 Use the documented provider shape:
 
@@ -290,11 +290,11 @@ export default {
 
 `useConvexAccessAuth` exposes `isLoading`, `isAuthenticated`, and `fetchAccessToken({ forceRefreshToken })`. `src/main.jsx` uses `ConvexProviderWithAuth`.
 
-- [ ] **Step 4: Enforce identity in every Convex function**
+- [x] **Step 4: Enforce identity in every Convex function**
 
 `convex/lib/auth.ts` calls `ctx.auth.getUserIdentity()`, rejects null identity, validates canonical `staffId`, and returns it. Every exported query, mutation, and action invokes it before database or external-service access. Do not accept user IDs from function arguments for authorization.
 
-- [ ] **Step 5: Replace password login UI with Access state**
+- [x] **Step 5: Replace password login UI with Access state**
 
 Production Login becomes a bootstrap/error view. `AuthProvider` reflects Convex/Access state rather than arbitrary local storage. Logout clears in-memory state and navigates to Access logout.
 
