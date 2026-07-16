@@ -1,4 +1,6 @@
 import type { SoundName } from "cuelume";
+import type { StaffId } from "@/lib/session";
+
 
 export type Destination = {
   id: string;
@@ -15,7 +17,7 @@ export type Destination = {
 };
 
 export type GatewayUser = {
-  id: string;
+  id: StaffId;
   name: string;
   shapeIndex: number;
   accent: string;
@@ -40,6 +42,8 @@ export const DESTINATIONS: Destination[] = [
   { id: "client", name: "Client Portal", shapeIndex: 4, accent: "#2dd4bf", route: "/client-portal", url: "https://client.houseofexp.com/", cue: "bloom" },
   { id: "academy", name: "Academy", shapeIndex: 5, accent: "#facc15", route: "/academy", url: "https://academy.houseofexp.com/", comingSoon: true, cue: "chime" },
 ];
+
+export const STAFF_IDS = ["aldi", "dissa", "bil"] as const satisfies readonly StaffId[];
 
 export const USERS: GatewayUser[] = [
   { id: "aldi", name: "Pak Aldi", shapeIndex: 6, accent: "#c084fc", cue: "chime" },

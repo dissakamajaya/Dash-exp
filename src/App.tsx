@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { play } from "cuelume";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -6,6 +6,7 @@ import ShapeGrid from "@/components/ShapeGrid";
 import SoundToggle from "@/components/SoundToggle";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useCuelume } from "@/hooks/useCuelume";
+import { getSession, localLogin, SessionError, type Session } from "@/lib/session";
 import {
   DESTINATIONS,
   SELECTOR_ITEMS,
@@ -16,19 +17,31 @@ import {
 
 const DEFAULT_ACCENT = "#818cf8";
 
+type AccentStyle = CSSProperties & { "--accent": string };
+
 type SavedSelection = {
   appId: string | null;
-  userId: string | null;
+  userId: Session["staffId"] | null;
 };
+
+function matchingUserId(value: unknown): Session["staffId"] | null {
+  return USERS.find((item) => item.id === value)?.id ?? null;
+}
+
+function matchingAppId(value: unknown): string | null {
+  return DESTINATIONS.find((item) => item.id === value)?.id ?? null;
+}
 
 function loadSelection(): SavedSelection {
   try {
     const value = localStorage.getItem(STORAGE_KEY);
     if (!value) return { appId: null, userId: null };
-    const saved = JSON.parse(value) as SavedSelection;
+    const saved = JSON.parse(value);
+    const savedAppId = saved && typeof saved === "object" && "appId" in saved ? saved.appId : null;
+    const savedUserId = saved && typeof saved === "object" && "userId" in saved ? saved.userId : null;
     return {
-      appId: DESTINATIONS.some((item) => item.id === saved.appId) ? saved.appId : null,
-      userId: USERS.some((item) => item.id === saved.userId) ? saved.userId : null,
+      appId: matchingAppId(savedAppId),
+      userId: matchingUserId(savedUserId),
     };
   } catch {
     return { appId: null, userId: null };
@@ -39,23 +52,38 @@ function readRoute() {
   return window.location.hash.slice(1).split("?")[0] || "/";
 }
 
+function isLocalHostname() {
+  return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "::1";
+}
+
+function sessionError(error: unknown): SessionError {
+  if (error instanceof SessionError) return error;
+  return new SessionError(500, "session_request_failed", "Session request failed.");
+}
+
 export default function App() {
   const { soundEnabled, toggleSound } = useCuelume();
   const [dark, setDark] = useState(true);
   const [selection, setSelection] = useState<SavedSelection>(loadSelection);
+  const [session, setSession] = useState<Session | null>(null);
+  const [authError, setAuthError] = useState<SessionError | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [route, setRoute] = useState(readRoute);
 
   const selectedApp = DESTINATIONS.find((item) => item.id === selection.appId) ?? null;
-  const selectedUser = USERS.find((item) => item.id === selection.userId) ?? null;
+  const serverUser = session ? (USERS.find((item) => item.id === session.staffId) ?? null) : null;
+  const selectedUser = serverUser ?? USERS.find((item) => item.id === selection.userId) ?? null;
   const routeApp = DESTINATIONS.find((item) => item.route === route) ?? null;
   const hoveredItem = SELECTOR_ITEMS.find((item) => item.shapeIndex === hoveredIndex);
   const activeAccent = hoveredItem?.accent ?? selectedApp?.accent ?? selectedUser?.accent ?? DEFAULT_ACCENT;
   const selectedIndices = [selectedApp?.shapeIndex, selectedUser?.shapeIndex].filter(
     (value): value is number => value !== undefined,
   );
+  const localLoginAvailable = isLocalHostname() && !session && (!authError || authError.status === 401);
+  const blockedByAuth = !authLoading && !session && authError && !localLoginAvailable;
 
   useEffect(() => {
     const root = document.documentElement;
@@ -78,57 +106,85 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    getSession()
+      .then((value) => {
+        if (cancelled) return;
+        setSession(value);
+        setAuthError(null);
+        setSelection((current) => ({ ...current, userId: value.staffId }));
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setAuthError(sessionError(error));
+      })
+      .finally(() => {
+        if (!cancelled) setAuthLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const selectItem = (item: SelectorItem) => {
+    if (item.kind === "user" && session) return;
     play(item.cue);
-    setSelection((current) =>
-      item.kind === "destination"
-        ? { ...current, appId: item.id }
-        : { ...current, userId: item.id },
-    );
+    setAuthError((current) => (current?.code === "invalid_local_login" ? null : current));
+    setSelection((current) => {
+      if (item.kind === "destination") return { ...current, appId: item.id };
+      const userId = matchingUserId(item.id);
+      return { ...current, userId: userId ?? current.userId };
+    });
   };
 
   const clearSelection = () => {
-    setSelection({ appId: null, userId: null });
+    setSelection({ appId: null, userId: session?.staffId ?? null });
     setHoveredIndex(null);
     setPassword("");
     setLoading(false);
   };
 
-  const submit = (event: React.FormEvent) => {
+  const continueToDestination = (app: NonNullable<typeof selectedApp>) => {
+    play("success");
+    if (app.comingSoon) {
+      window.location.hash = app.route;
+      setLoading(false);
+      setPassword("");
+      return;
+    }
+    window.location.assign(app.url);
+  };
+
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!selectedApp || !selectedUser || !password) return;
+    if (!selectedApp || !selectedUser || (!session && !password)) return;
 
     play("loading");
     setLoading(true);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
-    } catch {
-      // Redirect is not blocked if storage is unavailable.
-    }
+    setAuthError(null);
 
-    window.setTimeout(() => {
-      play("success");
-      if (selectedApp.comingSoon) {
-        window.location.hash = `${selectedApp.route}?user=${selectedUser.id}`;
-        setLoading(false);
-        setPassword("");
-        return;
+    try {
+      if (!session) {
+        const value = await localLogin(selectedUser.id, password);
+        setSession(value);
+        setSelection((current) => ({ ...current, userId: value.staffId }));
       }
-      // TODO(auth): exchange password for a session token before redirecting,
-      // so the target app skips its own login page.
-      const target = new URL(selectedApp.url);
-      target.searchParams.set("gateway_user", selectedUser.id);
-      window.location.assign(target.toString());
-    }, 650);
+
+      window.setTimeout(() => continueToDestination(selectedApp), 650);
+    } catch (error: unknown) {
+      setAuthError(sessionError(error));
+      setLoading(false);
+    }
   };
 
   if (routeApp) {
-    const query = window.location.hash.split("?")[1] ?? "";
-    const routedUserId = new URLSearchParams(query).get("user");
-    const routedUser = USERS.find((item) => item.id === routedUserId) ?? selectedUser;
+    const accentStyle: AccentStyle = { "--accent": routeApp.accent };
 
     return (
-      <div className="relative min-h-screen w-full" style={{ ["--accent" as string]: routeApp.accent }}>
+      <div className="relative min-h-screen w-full" style={accentStyle}>
         <AnimatedBackground accent={routeApp.accent} dark={dark} />
         <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
         <main className="relative z-10 flex min-h-screen items-center justify-center px-6 text-center">
@@ -147,7 +203,7 @@ export default function App() {
               className="mt-3 text-sm"
               style={{ color: dark ? "rgba(255,255,255,.48)" : "rgba(0,0,0,.48)" }}
             >
-              {routeApp.comingSoon ? "Segera hadir" : routedUser?.name}
+              {routeApp.comingSoon ? "Segera hadir" : selectedUser?.name}
             </p>
             <button
               type="button"
@@ -170,10 +226,45 @@ export default function App() {
     );
   }
 
+  if (authLoading || blockedByAuth) {
+    const visibleAuthError = authError ?? new SessionError(500, "session_request_failed", "Session request failed.");
+    const accentStyle: AccentStyle = { "--accent": activeAccent };
+    const title = authLoading ? "Memeriksa sesi" : visibleAuthError.status === 503 ? "Konfigurasi belum lengkap" : "Akses ditolak";
+    const message = authLoading
+      ? "Gateway sedang memvalidasi identitas."
+      : visibleAuthError.message;
+
+    return (
+      <div className="relative min-h-screen w-full transition-colors duration-500" style={accentStyle}>
+        <AnimatedBackground accent={activeAccent} dark={dark} />
+        <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
+        <main className="relative z-10 flex min-h-screen items-center justify-center px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <h1
+              className="text-4xl font-medium tracking-[-0.04em] sm:text-6xl"
+              style={{ color: dark ? "#fff" : "#171717" }}
+            >
+              {title}
+            </h1>
+            <p className="mt-4 max-w-sm text-sm" style={{ color: dark ? "rgba(255,255,255,.52)" : "rgba(0,0,0,.52)" }}>
+              {message}
+            </p>
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
+
+  const accentStyle: AccentStyle = { "--accent": activeAccent };
+
   return (
     <div
       className="relative min-h-screen w-full transition-colors duration-500"
-      style={{ ["--accent" as string]: activeAccent }}
+      style={accentStyle}
       onClick={clearSelection}
     >
       <AnimatedBackground accent={activeAccent} dark={dark} />
@@ -195,7 +286,6 @@ export default function App() {
             onSelect={selectItem}
             dark={dark}
           />
-
 
           <AnimatePresence mode="wait">
             {selectedApp && selectedUser && (
@@ -219,29 +309,36 @@ export default function App() {
                 </h1>
 
                 <form onSubmit={submit} className="mx-auto mt-5 max-w-[240px] space-y-3">
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Password"
-                    autoFocus
-                    required
-                    className="gateway-input w-full rounded-xl px-4 py-2.5 text-sm outline-none backdrop-blur-sm transition-all duration-300"
-                    style={{
-                      border: `1px solid ${dark ? "rgba(255,255,255,.12)" : "rgba(0,0,0,.12)"}`,
-                      backgroundColor: dark ? "rgba(255,255,255,.05)" : "rgba(255,255,255,.34)",
-                      color: dark ? "#fff" : "#171717",
-                    }}
-                  />
+                  {!session && (
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      placeholder="Password"
+                      autoFocus
+                      required
+                      className="gateway-input w-full rounded-xl px-4 py-2.5 text-sm outline-none backdrop-blur-sm transition-all duration-300"
+                      style={{
+                        border: `1px solid ${dark ? "rgba(255,255,255,.12)" : "rgba(0,0,0,.12)"}`,
+                        backgroundColor: dark ? "rgba(255,255,255,.05)" : "rgba(255,255,255,.34)",
+                        color: dark ? "#fff" : "#171717",
+                      }}
+                    />
+                  )}
+                  {authError && localLoginAvailable && (
+                    <p className="text-center text-xs" style={{ color: dark ? "rgba(255,255,255,.58)" : "rgba(0,0,0,.55)" }}>
+                      {authError.message}
+                    </p>
+                  )}
                   <motion.button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || (!session && !password)}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-opacity disabled:opacity-60"
                     style={{ backgroundColor: dark ? "#000" : "#111" }}
                   >
-                    {loading ? "Memuat..." : "Masuk"}
+                    {loading ? "Memuat..." : session ? "Buka" : "Masuk"}
                   </motion.button>
                 </form>
               </motion.div>
