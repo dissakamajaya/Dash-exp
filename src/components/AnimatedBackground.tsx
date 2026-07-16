@@ -1,9 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 
 interface Props {
   accent: string;
   dark: boolean;
 }
+
+// Tiny tiled SVG fractal noise — static after first paint, ~250 bytes.
+const NOISE =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E\")";
+
+type BgStyle = CSSProperties & { "--bg-accent": string };
 
 export default function AnimatedBackground({ accent, dark }: Props) {
   const meshRef = useRef<HTMLDivElement>(null);
@@ -12,10 +18,10 @@ export default function AnimatedBackground({ accent, dark }: Props) {
     const moveMesh = (event: MouseEvent) => {
       const x = ((event.clientX / window.innerWidth) * 2 - 1) * 18;
       const y = ((event.clientY / window.innerHeight) * 2 - 1) * 14;
-      meshRef.current?.style.setProperty("transform", `translate3d(${x}px, ${y}px, 0) scale(1.04)`);
+      meshRef.current?.style.setProperty("transform", `translate3d(${x}px, ${y}px, 0)`);
     };
     const resetMesh = () => {
-      meshRef.current?.style.setProperty("transform", "translate3d(0, 0, 0) scale(1)");
+      meshRef.current?.style.setProperty("transform", "translate3d(0, 0, 0)");
     };
 
     window.addEventListener("mousemove", moveMesh, { passive: true });
@@ -27,36 +33,66 @@ export default function AnimatedBackground({ accent, dark }: Props) {
   }, []);
 
   const palette = dark
-    ? ["#5b2bd6", "#8a1f5c", "#163a8a", "#0e6b73"]
+    ? ["#7c3aed", "#db2777", "#2563eb", "#0d9488"]
     : ["#c4b5fd", "#f9a8d4", "#93c5fd", "#99f6e4"];
   const base = dark ? "#06070e" : "#f4f2ef";
   const edge = dark ? "rgba(6, 7, 14, .88)" : "rgba(244, 242, 239, .72)";
+  const accentAlpha = dark ? "80%" : "85%";
+
+  const rootStyle: BgStyle = {
+    backgroundColor: base,
+    transition: "background-color 500ms ease, --bg-accent 600ms ease",
+    "--bg-accent": accent,
+  };
 
   return (
-    <div
-      className="pointer-events-none fixed inset-0 overflow-hidden"
-      style={{ backgroundColor: base, transition: "background-color 500ms ease" }}
-    >
+    <div className="pointer-events-none fixed inset-0 overflow-hidden" style={rootStyle}>
       <div
         ref={meshRef}
-        className="absolute -inset-[12%]"
+        className="absolute -inset-[18%]"
         style={{
-          backgroundImage: [
-            `radial-gradient(ellipse 42% 46% at 22% 22%, ${accent}a8 0%, transparent 72%)`,
-            `radial-gradient(ellipse 40% 44% at 78% 24%, ${palette[1]}92 0%, transparent 74%)`,
-            `radial-gradient(ellipse 48% 50% at 30% 78%, ${palette[2]}9a 0%, transparent 72%)`,
-            `radial-gradient(ellipse 42% 48% at 78% 74%, ${palette[3]}86 0%, transparent 72%)`,
-          ].join(", "),
-          transition: "transform 500ms cubic-bezier(.23, 1, .32, 1), background-image 700ms ease",
-          transform: "translate3d(0, 0, 0) scale(1)",
+          transition: "transform 600ms cubic-bezier(.23, 1, .32, 1)",
+          transform: "translate3d(0, 0, 0)",
           willChange: "transform",
         }}
-      />
+      >
+        <div
+          className="bg-liquid absolute inset-0"
+          style={{
+            backgroundImage: [
+              `radial-gradient(ellipse 44% 48% at 22% 24%, color-mix(in srgb, var(--bg-accent) ${accentAlpha}, transparent) 0%, transparent 70%)`,
+              `radial-gradient(ellipse 48% 50% at 30% 78%, ${palette[2]}b0 0%, transparent 72%)`,
+            ].join(", "),
+            animation: "bg-drift-a 22s ease-in-out infinite",
+          }}
+        />
+        <div
+          className="bg-liquid absolute inset-0"
+          style={{
+            backgroundImage: [
+              `radial-gradient(ellipse 40% 44% at 78% 22%, ${palette[1]}a6 0%, transparent 74%)`,
+              `radial-gradient(ellipse 44% 50% at 76% 76%, ${palette[3]}9a 0%, transparent 72%)`,
+              `radial-gradient(ellipse 60% 52% at 50% 50%, ${palette[0]}3d 0%, transparent 78%)`,
+            ].join(", "),
+            animation: "bg-drift-b 31s ease-in-out infinite",
+          }}
+        />
+      </div>
       <div
         className="absolute inset-0"
         style={{
           background: `radial-gradient(ellipse at 50% 46%, transparent 26%, ${edge} 100%)`,
           transition: "background 500ms ease",
+        }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: NOISE,
+          backgroundRepeat: "repeat",
+          backgroundSize: "140px 140px",
+          opacity: dark ? 0.16 : 0.1,
+          mixBlendMode: "overlay",
         }}
       />
     </div>
