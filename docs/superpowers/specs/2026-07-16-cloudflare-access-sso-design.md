@@ -11,7 +11,7 @@ Replace the gateway's non-functional password check and the active applications'
 
 The coordinated cutover covers:
 
-- `Dash-exp` at `dashboard.houseofexp.com`
+- `Dash-exp` at `dash.houseofexp.com`
 - Studio at `studio.houseofexp.com`
 - Finance at `finance.houseofexp.com`
 - Website Admin at `houseofexp.com/edit/`
@@ -65,7 +65,7 @@ Create self-hosted Access applications and reusable allow policies for:
 
 | Resource | Protected path | Notes |
 |---|---|---|
-| Gateway | `dashboard.houseofexp.com/*` | Staff launcher and identity bootstrap |
+| Gateway | `dash.houseofexp.com/*` | Staff launcher and identity bootstrap |
 | Studio | `studio.houseofexp.com/*` | SPA and same-origin `/api/*` Worker route |
 | Finance | `finance.houseofexp.com/*` | SPA and same-origin auth bridge |
 | Website Admin UI | `houseofexp.com/edit/*` | Public website remains unprotected |

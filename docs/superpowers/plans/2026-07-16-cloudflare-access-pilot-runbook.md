@@ -23,7 +23,7 @@ Access → Applications → Add self-hosted. Reuse `HouseOfExpStaff` policy on e
 
 | Application name | Hostname / path |
 |---|---|
-| gateway | `dashboard.houseofexp.com/*` |
+| gateway | `dash.houseofexp.com/*` |
 | studio | `studio.houseofexp.com/*` |
 | finance | `finance.houseofexp.com/*` |
 | website-admin-ui | `houseofexp.com/edit/*` |
@@ -111,13 +111,13 @@ Convex dashboard → Environment → set matching `ACCESS_TEAM_DOMAIN` / `ACCESS
 
 Sign in once through the gateway with One-Time PIN, then verify each app in a single session without a second prompt:
 
-1. `dashboard.houseofexp.com/` → identity hydrates; select an app; redirect contains no `gateway_user`.
+1. `dash.houseofexp.com/` → identity hydrates; select an app; redirect contains no `gateway_user`.
 2. `studio.houseofexp.com/` → member auto-selected; one read + one authored write.
 3. `finance.houseofexp.com/` → Convex reads and one write succeed; direct anonymous Convex call denied.
 4. `houseofexp.com/edit/` → dashboard loads; one settings save succeeds.
 5. `client.houseofexp.com/admin` → admin view; one guarded admin write succeeds.
 6. Separate unauthenticated browser: `client.houseofexp.com/` external client login unchanged.
-7. `dashboard.houseofexp.com/cdn-cgi/access/logout` → global logout forces re-authentication everywhere.
+7. `dash.houseofexp.com/cdn-cgi/access/logout` → global logout forces re-authentication everywhere.
 
 If a target fails: disable only its Access application, roll back its deploy, keep the other apps live. Never re-enable local password mode in production.
 

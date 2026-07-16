@@ -4,6 +4,10 @@
   "main": "worker/index.ts",
   "compatibility_date": "2026-07-16",
   "compatibility_flags": ["nodejs_compat"],
+  "keep_vars": true,
+  "routes": [
+    { "pattern": "dash.houseofexp.com/*", "zone_name": "houseofexp.com" }
+  ],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
