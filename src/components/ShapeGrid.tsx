@@ -19,126 +19,138 @@ const lineProps = {
   vectorEffect: "non-scaling-stroke" as const,
 };
 
-function StarburstShape() {
-  const points = Array.from({ length: 28 }, (_, index) => {
-    const angle = (Math.PI * 2 * index) / 28 - Math.PI / 2;
-    const radius = index % 2 === 0 ? 35 : 22;
-    return `${50 + Math.cos(angle) * radius},${50 + Math.sin(angle) * radius}`;
+/** Concave four-point sparkle, as drawn in the House of EXP vector sheet. */
+function Sparkle({ cx, cy, r }: { cx: number; cy: number; r: number }) {
+  const d = `M${cx} ${cy - r} Q${cx} ${cy} ${cx + r} ${cy} Q${cx} ${cy} ${cx} ${cy + r} Q${cx} ${cy} ${cx - r} ${cy} Q${cx} ${cy} ${cx} ${cy - r} Z`;
+  return <path d={d} {...lineProps} />;
+}
+
+function starPoints(cx: number, cy: number, spikes: number, outer: number, inner: number) {
+  return Array.from({ length: spikes * 2 }, (_, index) => {
+    const angle = (Math.PI * 2 * index) / (spikes * 2) - Math.PI / 2;
+    const radius = index % 2 === 0 ? outer : inner;
+    return `${(cx + Math.cos(angle) * radius).toFixed(2)},${(cy + Math.sin(angle) * radius).toFixed(2)}`;
   }).join(" ");
-  return <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true"><polygon points={points} {...lineProps} /></svg>;
 }
 
-function MonogramShape() {
+/** Studio — needle-ray sunburst. */
+function SunburstShape() {
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
-      <circle cx="37" cy="50" r="31" {...lineProps} />
-      <path d="M51 19h17c11 0 18 7 18 17S79 53 68 53H51" {...lineProps} />
-      <path d="M51 19v62M65 53l22 28" {...lineProps} />
-      <circle cx="37" cy="50" r="13" {...lineProps} />
+      <polygon points={starPoints(50, 50, 22, 45, 15)} {...lineProps} />
     </svg>
   );
 }
 
-function MatrixShape() {
-  const activeDots = new Set([0, 2, 4, 6, 8]);
+/** Finance — woven waffle grid. */
+function WaffleShape() {
+  const bands = [14, 34, 54, 74];
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
-      {[0, 1, 2].flatMap((row) =>
-        [0, 1, 2].map((col) => {
-          const index = row * 3 + col;
-          const x = 14 + col * 27;
-          const y = 16 + row * 26;
-          return (
-            <g key={index}>
-              <rect x={x} y={y} width="22" height="19" rx="8" {...lineProps} />
-              {activeDots.has(index) && <circle cx={x + 11} cy={y + 9.5} r="2.8" fill="currentColor" />}
-            </g>
-          );
-        }),
-      )}
+      {bands.map((y) => (
+        <rect key={`h${y}`} x="6" y={y} width="88" height="12" rx="6" {...lineProps} />
+      ))}
+      {bands.map((x) => (
+        <rect key={`v${x}`} x={x} y="6" width="12" height="88" rx="6" {...lineProps} />
+      ))}
     </svg>
   );
 }
 
-function RosetteShape() {
-  const points = Array.from({ length: 144 }, (_, index) => {
-    const angle = (Math.PI * 2 * index) / 144 - Math.PI / 2;
-    const radius = 29 + 5 * Math.sin(angle * 12);
-    return `${50 + Math.cos(angle) * radius},${50 + Math.sin(angle) * radius}`;
-  }).join(" ");
+/** Rental — triangle raised over a hanging dome, split by the horizon. */
+function HorizonShape() {
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
-      <polygon points={points} {...lineProps} />
-      <circle cx="50" cy="50" r="17" {...lineProps} opacity="0.55" />
+      <path d="M8 56H92" {...lineProps} />
+      <path d="M24 56 66 12v44Z" {...lineProps} />
+      <path d="M34 56a22 22 0 0 0 44 0Z" {...lineProps} />
     </svg>
   );
 }
 
-function SplitPortalShape() {
+/** Website Admin — spiky star escaping its square frame. */
+function FramedStarShape() {
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
-      <rect x="14" y="20" width="72" height="60" rx="15" {...lineProps} />
-      <path d="M50 20v60" {...lineProps} />
-      <path d="M50 22c-10 8-12 17-5 28s5 21-5 29" {...lineProps} />
-      <path d="M50 22a28 28 0 0 0 0 56" {...lineProps} />
+      <rect x="8" y="8" width="70" height="70" {...lineProps} />
+      <polygon points={starPoints(52, 52, 12, 40, 20)} {...lineProps} />
     </svg>
   );
 }
 
-function GeometricShape() {
+/** Client Portal — target lens crossed by a meridian. */
+function MeridianShape() {
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
-      <rect x="20" y="20" width="60" height="60" rx="10" transform="rotate(45 50 50)" {...lineProps} />
-      <circle cx="50" cy="50" r="20" {...lineProps} />
-      <line x1="50" y1="12" x2="50" y2="88" {...lineProps} />
+      <circle cx="50" cy="50" r="36" {...lineProps} />
+      <circle cx="50" cy="50" r="24" {...lineProps} />
+      <path d="M50 6v88" {...lineProps} />
     </svg>
   );
 }
 
-function LayeredPanelShape() {
+/** Academy — two offset domes mirrored across the gap. */
+function DomesShape() {
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
-      <rect x="13" y="23" width="74" height="54" rx="18" {...lineProps} />
-      <path d="M13 45h74M13 58h74" {...lineProps} />
-      <circle cx="31" cy="34" r="6" {...lineProps} />
-      <circle cx="50" cy="34" r="6" {...lineProps} />
-      <circle cx="69" cy="34" r="6" {...lineProps} />
+      <path d="M14 46a29 29 0 0 1 58 0Z" {...lineProps} />
+      <path d="M28 54a29 29 0 0 0 58 0Z" {...lineProps} />
     </svg>
   );
 }
 
-function EyeShape() {
+function EyePaths({ irisX = 48, irisY = 52 }: { irisX?: number; irisY?: number }) {
+  return (
+    <>
+      <path d="M8 52Q28 28 48 28q20 0 40 24Q68 76 48 76T8 52Z" {...lineProps} />
+      <path d="M20 52q14-14 28-14t28 14Q62 66 48 66T20 52Z" {...lineProps} />
+      <circle cx={irisX} cy={irisY} r="11" {...lineProps} />
+      <circle cx={irisX} cy={irisY} r="4.5" {...lineProps} />
+    </>
+  );
+}
+
+/** Pak Aldi — eye with a sparkle high right. */
+function EyeSparkleHighShape() {
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
-      <path d="M14 50c10-19 23-28 36-28s26 9 36 28c-10 19-23 28-36 28S24 69 14 50Z" {...lineProps} />
-      <circle cx="50" cy="50" r="16" {...lineProps} />
-      <circle cx="50" cy="50" r="7" {...lineProps} />
+      <EyePaths />
+      <Sparkle cx={84} cy={16} r={12} />
     </svg>
   );
 }
 
-function EyeSparkleShape() {
+/** Pak Dissa — watchful eye with a plus-star at its side. */
+function EyePlusShape() {
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
-      <path d="M13 43c10-17 22-25 36-25s26 8 36 25c-10 17-22 25-36 25S23 60 13 43Z" {...lineProps} />
-      <circle cx="49" cy="43" r="13" {...lineProps} />
-      <circle cx="49" cy="43" r="5" {...lineProps} />
-      <path d="M78 62v18M69 71h18M72 65l12 12M84 65 72 77" {...lineProps} />
-      <circle cx="78" cy="71" r="2" fill="currentColor" />
+      <EyePaths irisX={44} irisY={48} />
+      <path d="M14 14v20M4 24h20" {...lineProps} />
+    </svg>
+  );
+}
+
+/** Pak Bil — eye with paired sparkles low right. */
+function EyeSparkleLowShape() {
+  return (
+    <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
+      <EyePaths />
+      <Sparkle cx={82} cy={82} r={11} />
+      <Sparkle cx={93} cy={64} r={5} />
     </svg>
   );
 }
 
 const SHAPES = [
-  StarburstShape,
-  MonogramShape,
-  MatrixShape,
-  RosetteShape,
-  SplitPortalShape,
-  GeometricShape,
-  LayeredPanelShape,
-  EyeShape,
-  EyeSparkleShape,
+  SunburstShape,
+  WaffleShape,
+  HorizonShape,
+  FramedStarShape,
+  MeridianShape,
+  DomesShape,
+  EyeSparkleHighShape,
+  EyePlusShape,
+  EyeSparkleLowShape,
 ];
 
 export default function ShapeGrid({
