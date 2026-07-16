@@ -13,12 +13,15 @@ This is a landing page / dashboard for the House of Exp ecosystem. It serves as 
 4. System redirects to the selected application
 
 ### Applications in Ecosystem
-- **studio.houseofexp.com** - Studio application
-- **finance.houseofexp.com** - Finance management
-- **rental.houseofexp.com** - Rental management
-- **academy.houseofexp.com** - Academy/learning platform
-- **houseofexp.com/edit/** - Content editing interface
-- **client.houseofexp.com** - Client portal
+
+| App | URL | Repository | Status |
+|-----|-----|------------|--------|
+| **Studio** | studio.houseofexp.com | `/Users/0xtx/Documents/GitHub/STUDIOSTAFF V2` | Active |
+| **Finance** | finance.houseofexp.com | `/Users/0xtx/Documents/GitHub/STUDIOSTAFF-FINANCE` | Active |
+| **Rental** | rental.houseofexp.com | - | Coming Soon |
+| **Academy** | academy.houseofexp.com | - | Coming Soon |
+| **Edit** | houseofexp.com/edit/ | `/Users/0xtx/Documents/GitHub/website` | Active |
+| **Client** | client.houseofexp.com | `/Users/0xtx/Documents/GitHub/exp-vault` | Active |
 
 ### Users
 - Aldi
