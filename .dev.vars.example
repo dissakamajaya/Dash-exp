@@ -1,0 +1,4 @@
+ENVIRONMENT=local
+AUTH_MODE=local
+LOCAL_PASSWORD_VERIFIERS='[{"staffId":"aldi","salt":"base64url-salt","iterations":310000,"hash":"base64url-pbkdf2-sha256"},{"staffId":"dissa","salt":"base64url-salt","iterations":310000,"hash":"base64url-pbkdf2-sha256"},{"staffId":"bil","salt":"base64url-salt","iterations":310000,"hash":"base64url-pbkdf2-sha256"}]'
+LOCAL_SESSION_SECRET="replace-with-a-random-local-only-secret"
