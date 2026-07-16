@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { play } from "cuelume";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import ShapeGrid from "@/components/ShapeGrid";
+import SoundToggle from "@/components/SoundToggle";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useCuelume } from "@/hooks/useCuelume";
 import {
   DESTINATIONS,
   SELECTOR_ITEMS,
@@ -37,6 +40,7 @@ function readRoute() {
 }
 
 export default function App() {
+  const { soundEnabled, toggleSound } = useCuelume();
   const [dark, setDark] = useState(true);
   const [selection, setSelection] = useState<SavedSelection>(loadSelection);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -75,6 +79,7 @@ export default function App() {
   }, []);
 
   const selectItem = (item: SelectorItem) => {
+    play(item.cue);
     setSelection((current) =>
       item.kind === "destination"
         ? { ...current, appId: item.id }
@@ -93,6 +98,7 @@ export default function App() {
     event.preventDefault();
     if (!selectedApp || !selectedUser || !password) return;
 
+    play("loading");
     setLoading(true);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
@@ -101,6 +107,7 @@ export default function App() {
     }
 
     window.setTimeout(() => {
+      play("success");
       if (selectedApp.comingSoon) {
         window.location.hash = `${selectedApp.route}?user=${selectedUser.id}`;
         setLoading(false);
@@ -171,6 +178,7 @@ export default function App() {
     >
       <AnimatedBackground accent={activeAccent} dark={dark} />
       <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
+      <SoundToggle enabled={soundEnabled} onToggle={toggleSound} dark={dark} />
 
       <main className="relative z-10 flex min-h-screen items-center justify-center px-4 py-8 sm:py-10">
         <motion.div

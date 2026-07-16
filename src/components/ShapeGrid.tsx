@@ -193,6 +193,9 @@ export default function ShapeGrid({
           <motion.button
             key={`${item.kind}-${item.id}`}
             type="button"
+            data-cuelume-hover="whisper"
+            data-cuelume-press
+            data-cuelume-release
             aria-label={item.kind === "user" ? `Select user ${item.name}` : `Select ${item.name}`}
             aria-pressed={selected}
             onMouseEnter={() => onHover(item.shapeIndex)}
