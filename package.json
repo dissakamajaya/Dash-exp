@@ -5,22 +5,19 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:auth": "bun run build && wrangler dev",
     "build": "vite build",
-    "test": "vitest run",
-    "deploy": "bun run build && wrangler deploy"
+    "preview": "vite preview"
   },
   "dependencies": {
     "clsx": "2.1.1",
     "cuelume": "^0.1.2",
-    "framer-motion": "^12.42.2",
+    "motion": "^12.42.2",
     "jose": "^6.2.3",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "tailwind-merge": "3.4.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260716.1",
     "@tailwindcss/vite": "4.1.17",
     "@types/node": "22.19.17",
     "@types/react": "19.2.7",
@@ -29,8 +26,6 @@
     "tailwindcss": "4.1.17",
     "typescript": "5.9.3",
     "vite": "7.3.2",
-    "vite-plugin-singlefile": "2.3.0",
-    "vitest": "^4.1.10",
-    "wrangler": "^4.111.0"
+    "vite-plugin-singlefile": "2.3.0"
   }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { play } from "cuelume";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import ShapeGrid from "@/components/ShapeGrid";
@@ -194,27 +194,29 @@ export default function App() {
       : visibleAuthError.message;
 
     return (
-      <div className="relative min-h-screen w-full transition-colors duration-500" style={accentStyle}>
+      <MotionConfig reducedMotion="user">
+      <div className="relative min-h-dvh w-full transition-colors duration-500" style={accentStyle}>
         <AnimatedBackground accent={activeAccent} dark={dark} />
         <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
-        <main className="relative z-10 flex min-h-screen items-center justify-center px-6 text-center">
+        <main className="relative z-10 flex min-h-dvh items-center justify-center px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
             <h1
-              className="text-4xl font-medium tracking-[-0.04em] sm:text-6xl"
+              className="text-balance text-4xl font-medium sm:text-6xl"
               style={{ color: dark ? "#fff" : "#171717" }}
             >
               {title}
             </h1>
-            <p className="mt-4 max-w-sm text-sm" style={{ color: dark ? "rgba(255,255,255,.52)" : "rgba(0,0,0,.52)" }}>
+            <p className="mt-4 max-w-sm text-pretty text-sm" style={{ color: dark ? "rgba(255,255,255,.52)" : "rgba(0,0,0,.52)" }}>
               {message}
             </p>
           </motion.div>
         </main>
       </div>
+      </MotionConfig>
     );
   }
 
@@ -222,23 +224,24 @@ export default function App() {
     const accentStyle: AccentStyle = { "--accent": routeApp.accent };
 
     return (
-      <div className="relative min-h-screen w-full" style={accentStyle}>
+      <MotionConfig reducedMotion="user">
+      <div className="relative min-h-dvh w-full" style={accentStyle}>
         <AnimatedBackground accent={routeApp.accent} dark={dark} />
         <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
-        <main className="relative z-10 flex min-h-screen items-center justify-center px-6 text-center">
+        <main className="relative z-10 flex min-h-dvh items-center justify-center px-6 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           >
             <h1
-              className="text-5xl font-medium tracking-[-0.05em] sm:text-7xl"
+              className="text-balance text-5xl font-medium sm:text-7xl"
               style={{ color: dark ? "#fff" : "#171717" }}
             >
               {routeApp.name}
             </h1>
             <p
-              className="mt-3 text-sm"
+              className="mt-3 text-pretty text-sm"
               style={{ color: dark ? "rgba(255,255,255,.48)" : "rgba(0,0,0,.48)" }}
             >
               {routeApp.comingSoon ? "Segera hadir" : selectedUser?.name}
@@ -261,22 +264,24 @@ export default function App() {
           </motion.div>
         </main>
       </div>
+      </MotionConfig>
     );
   }
 
   const accentStyle: AccentStyle = { "--accent": activeAccent };
 
   return (
-    <div
-      className="relative min-h-screen w-full transition-colors duration-500"
-      style={accentStyle}
+      <MotionConfig reducedMotion="user">
+      <div
+        className="relative min-h-dvh w-full transition-colors duration-500"
+        style={accentStyle}
       onClick={clearSelection}
     >
       <AnimatedBackground accent={activeAccent} dark={dark} />
       <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
       <SoundToggle enabled={soundEnabled} onToggle={toggleSound} dark={dark} />
 
-      <main className="relative z-10 flex min-h-screen items-center justify-center px-4 py-8 sm:py-10">
+      <main className="relative z-10 flex min-h-dvh items-center justify-center px-4 py-8 sm:py-10">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -293,18 +298,38 @@ export default function App() {
           />
 
           <AnimatePresence mode="wait">
+            {!(selectedApp && selectedUser) && (
+              <motion.p
+                key={selectedApp ? "pick-user" : selectedUser ? "pick-app" : "pick-both"}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.35 }}
+                className="mt-5 text-center text-pretty text-xs"
+                style={{ color: dark ? "rgba(255,255,255,.4)" : "rgba(0,0,0,.42)" }}
+              >
+                {selectedApp
+                  ? "Sekarang pilih siapa kamu"
+                  : selectedUser
+                    ? "Sekarang pilih aplikasi tujuan"
+                    : "Pilih aplikasi & siapa kamu untuk masuk"}
+              </motion.p>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence mode="wait">
             {selectedApp && selectedUser && (
               <motion.div
                 key={`${selectedApp.id}-${selectedUser.id}`}
-                initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                animate={{ opacity: 1, height: "auto", marginTop: 18 }}
-                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
                 transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden"
+                className="mt-5"
                 onClick={(event) => event.stopPropagation()}
               >
                 <h1
-                  className="text-center text-base font-medium tracking-tight transition-colors duration-500 sm:text-lg"
+                  className="text-balance text-center text-base font-medium transition-colors duration-500 sm:text-lg"
                   style={{ color: dark ? "#ffffff" : "#171717" }}
                 >
                   {selectedUser.name},{" "}
@@ -319,7 +344,7 @@ export default function App() {
                       type="password"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
-                      placeholder="Password"
+                      placeholder="Kata sandi"
                       autoFocus
                       required
                       className="gateway-input w-full rounded-xl px-4 py-2.5 text-sm outline-none backdrop-blur-sm transition-all duration-300"
@@ -352,5 +377,6 @@ export default function App() {
         </motion.div>
       </main>
     </div>
+    </MotionConfig>
   );
 }
