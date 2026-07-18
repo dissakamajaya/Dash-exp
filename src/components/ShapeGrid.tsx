@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion } from "motion/react"
 import type { SelectorItem } from "@/data/gateway";
 
 interface ShapeGridProps {
@@ -263,7 +263,7 @@ export default function ShapeGrid({
               <Shape />
             </div>
             <motion.span
-              className="mt-1 max-w-full truncate text-[10px] font-medium tracking-wide sm:text-[11px]"
+              className="mt-1 max-w-full truncate text-[10px] font-medium sm:text-[11px]"
               animate={{
                 opacity: active ? 1 : shouldPulse ? [0.3, 0.8, 0.3] : 0,
                 y: active ? 0 : -3,

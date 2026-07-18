@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion } from "motion/react"
 
 interface Props {
   dark: boolean;
@@ -14,7 +14,7 @@ export default function ThemeToggle({ dark, onToggle }: Props) {
       }}
       aria-label="Toggle theme"
       data-cuelume-toggle
-      className="fixed right-5 top-5 z-50 flex h-10 w-10 items-center justify-center rounded-full border backdrop-blur-lg transition-colors duration-300"
+      className="fixed right-5 top-5 z-50 flex size-10 items-center justify-center rounded-full border backdrop-blur-lg transition-colors duration-300"
       style={{
         borderColor: dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
         backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
