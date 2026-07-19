@@ -313,15 +313,15 @@ Exercise a representative finance read and write through the browser, then call 
 - Consumes: deployed hostnames, each Access AUD tag, actual staff email addresses, and the path map in the approved design.
 - Produces: one reusable three-email allow policy and the seven protected application/path resources.
 
-- [ ] **Step 1: Inspect account state before mutation**
+- [x] **Step 1: Inspect account state before mutation**
 
 Use authenticated Cloudflare account access to list existing identity providers, Access applications, policies, DNS records, and current custom domains. Reuse matching resources; do not create duplicate applications or guess IDs.
 
-- [ ] **Step 2: Configure a three-user pilot**
+- [x] **Step 2: Configure a three-user pilot**
 
 Enable Access One-Time PIN, create or reuse a reusable allow policy containing only Aldi, Dissa, and Bil's actual lowercased email addresses, then apply the exact resource/path table from the design spec. Set global session to 24 hours and application sessions to 8 hours. Keep the Finance JWKS route publicly readable while its token endpoint remains Access-protected.
 
-- [ ] **Step 3: Propagate runtime configuration**
+- [x] **Step 3: Propagate runtime configuration**
 
 Set each app's team domain, own audience tag, and staff email mappings in its deployment secret/config system. Set Finance bridge private JWK only in the Vercel server environment and expose no private key through JWKS or frontend variables.
 
@@ -329,7 +329,9 @@ Set each app's team domain, own audience tag, and staff email mappings in its de
 
 Authenticate once at the gateway and open Studio, Finance, Website Admin, and Client Admin without a second prompt. Perform one representative authenticated read and write in each app. Verify an unauthorized email receives Access denial, external Client Portal login still works, and global logout requires Access again everywhere.
 
-- [ ] **Step 5: Record rollback evidence**
+Partially verified: all 5 protected surfaces return 302 to Access login with the correct AUD (`kid`) at the edge; public paths and the Finance JWKS bypass remain open; sub-paths inherit protection; production local-mode endpoints are blocked before reaching Worker code. The authenticated login flow itself needs one of Aldi/Dissa/Bil to complete an Access OTP — not run (no inbox access). See `docs/superpowers/plans/2026-07-19-access-pilot-rollback-evidence.md`.
+
+- [x] **Step 5: Record rollback evidence**
 
 Capture the pre-change Access/application settings and deployment revisions. If a target fails its smoke flow, disable only that target's Access application and roll back its deployment; never enable local password mode in production or broaden the allow policy.
 
