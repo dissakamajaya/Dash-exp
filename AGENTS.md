@@ -8,7 +8,7 @@ A React single-page gateway for the House of Exp ecosystem. Users select their i
 
 - **Framework**: React 19 + Vite 7 + TypeScript 5.9
 - **Styling**: Tailwind CSS 4 (via `@tailwindcss/vite`)
-- **Animation**: Framer Motion 12
+- **Animation**: Motion 12 (via `motion/react`), with `MotionConfig reducedMotion="user"` on every render branch
 - **Audio**: cuelume (micro-sound cues on interaction)
 - **Auth crypto**: jose (JWT/session handling)
 - **Runtime**: Cloudflare Workers (wrangler 4)

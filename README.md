@@ -46,11 +46,29 @@ Authorized users:
 
 ## Tech Stack
 
-*To be determined*
+- **Framework**: React 19 + Vite 7 + TypeScript 5.9
+- **Styling**: Tailwind CSS 4 (via `@tailwindcss/vite`)
+- **Animation**: Motion 12 (`motion/react`) with `MotionConfig reducedMotion="user"`
+- **Audio**: cuelume (micro-sound cues)
+- **Auth crypto**: `jose` (JWT/session)
+- **Runtime**: Cloudflare Workers (wrangler 4) — served at `dash.houseofexp.com/*`
+- **Package manager**: Bun
 
 ## Development
 
-*Setup instructions to be added*
+```bash
+bun install
+
+bun run dev          # Vite dev server (frontend only)
+bun run dev:auth     # Build + wrangler dev (full Worker + auth)
+bun run build        # Production build to dist/
+bun run test         # Vitest
+bun run deploy       # Build + wrangler deploy
+```
+
+Local dev auth uses cookie-based sessions (`AUTH_MODE=local`); production uses Cloudflare Access SSO (`AUTH_MODE=access`). Local secrets live in `.dev.vars` (gitignored); see `.dev.vars.example`.
+
+See [`AGENTS.md`](./AGENTS.md) for architecture, API routes, and design conventions.
 
 ## License
 
