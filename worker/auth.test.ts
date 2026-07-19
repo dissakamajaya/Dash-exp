@@ -126,7 +126,7 @@ describe("gateway auth worker", () => {
     await expect(response.json()).resolves.toMatchObject({ error: "invalid_local_login" });
   });
 
-  test("local endpoints are unavailable away from localhost", async () => {
+  test("local endpoints accept any hostname when ENVIRONMENT=local and AUTH_MODE=local", async () => {
     const env = await localEnv("aldi-password");
     const response = await worker.fetch(
       new Request("https://gateway.houseofexp.com/api/session/login", {
@@ -137,22 +137,22 @@ describe("gateway auth worker", () => {
       env,
     );
 
-    expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toMatchObject({ error: "local_auth_unavailable" });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ staffId: "aldi", name: "Pak Aldi" });
   });
 
-  test("local login and logout stay undiscoverable off-local before method and body parsing", async () => {
+  test("local login rejects bad method/body regardless of hostname", async () => {
     const env = await localEnv("aldi-password");
-    const cases = [
-      new Request("https://gateway.houseofexp.com/api/session/login", { method: "GET" }),
-      new Request("https://gateway.houseofexp.com/api/session/login", { method: "POST", body: "not json" }),
-      new Request("https://gateway.houseofexp.com/api/session/logout", { method: "GET" }),
+    const cases: [Request, number, Record<string, string>][] = [
+      [new Request("https://gateway.houseofexp.com/api/session/login", { method: "GET" }), 405, { error: "method_not_allowed" }],
+      [new Request("https://gateway.houseofexp.com/api/session/login", { method: "POST", body: "not json" }), 400, { error: "invalid_login_body" }],
+      [new Request("https://gateway.houseofexp.com/api/session/logout", { method: "GET" }), 405, { error: "method_not_allowed" }],
     ];
 
-    for (const request of cases) {
+    for (const [request, expectedStatus, expectedBody] of cases) {
       const response = await worker.fetch(request, env);
-      expect(response.status).toBe(404);
-      await expect(response.json()).resolves.toMatchObject({ error: "local_auth_unavailable" });
+      expect(response.status).toBe(expectedStatus);
+      await expect(response.json()).resolves.toMatchObject(expectedBody);
     }
   });
 

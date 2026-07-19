@@ -71,11 +71,11 @@ async function hmac(data: string, secret: string): Promise<Uint8Array> {
 }
 
 export function assertLocalEndpoint(request: Request, env: WorkerEnv): void {
-  const hostname = new URL(request.url).hostname;
-  const localhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "[::1]";
-  if (env.ENVIRONMENT !== "local" || env.AUTH_MODE !== "local" || !localhost) {
+  if (env.ENVIRONMENT !== "local" || env.AUTH_MODE !== "local") {
     throw new AuthFailure(404, "local_auth_unavailable", "Local auth is not available.");
   }
+  // Hostname check is defense-in-depth for production, but Wrangler's run_worker_first
+  // rewrites request.url to the production domain during local dev — skip it.
 }
 
 function parseVerifier(value: unknown): PasswordVerifier | null {
