@@ -165,7 +165,7 @@ All production `/api/*` handlers derive `authenticatedMember` from this function
 
 Use same-origin `/api` requests with credentials. Production `api.verify()` relies on the Access cookie/header path and no longer requires `ss2-token`. Keep the existing local JWT only when the Worker reports local mode. On logout, clear local state and navigate to `/cdn-cgi/access/logout`.
 
-- [ ] **Step 4: Smoke Studio through the same-origin Worker route**
+- [x] **Step 4: Smoke Studio through the same-origin Worker route**
 
 Confirm Access identity hydrates the correct existing member, one representative read and write record that member in audit data, `bill` remains the database ID for Bil, and an unmapped identity cannot reach any business API.
 
@@ -197,7 +197,7 @@ Use the existing `jose` dependency. Split `requireAdmin` into explicit Access an
 
 `/edit/login` becomes an Access bootstrap/denied screen rather than a password form. Admin pages continue calling guarded APIs. Logout clears any native local cookie and redirects to the Access logout endpoint.
 
-- [ ] **Step 3: Smoke public/admin separation**
+- [x] **Step 3: Smoke public/admin separation**
 
 Verify public pages still load without Access, `/edit/*` and `/api/admin/*` require Access, one content read and write succeeds for mapped staff, private media remains guarded, and password login is unavailable in production mode.
 
@@ -233,7 +233,7 @@ Update `SessionPayload` to make `authSource` explicit for new staff sessions. Ex
 
 Do not protect `/`, `/api/profile`, or client-note routes with Access. Existing client usernames/passwords, project scoping, and remember-session behavior remain unchanged. Protect `/admin*`, `/api/admin/*`, and `/api/media/upload-token` with Access plus existing app guards.
 
-- [ ] **Step 4: Smoke both trust domains**
+- [x] **Step 4: Smoke both trust domains**
 
 Verify an external client can log in at `/`, sees only assigned projects, and cannot enter `/admin`; mapped Access staff enters `/admin` without a client password and can perform one guarded admin read/write; the agent API still requires its service key.
 
@@ -298,7 +298,7 @@ export default {
 
 Production Login becomes a bootstrap/error view. `AuthProvider` reflects Convex/Access state rather than arbitrary local storage. Logout clears in-memory state and navigates to Access logout.
 
-- [ ] **Step 6: Smoke direct and browser access**
+- [x] **Step 6: Smoke direct and browser access**
 
 Exercise a representative finance read and write through the browser, then call the same Convex functions without an identity and confirm both reject. Confirm expired bridge tokens refresh once, invalid Access audience cannot mint a bridge, and the public JWKS contains no private key material.
 
