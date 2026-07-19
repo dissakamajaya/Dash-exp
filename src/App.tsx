@@ -160,7 +160,7 @@ export default function App() {
       setPassword("");
       return;
     }
-    window.location.assign(app.url);
+    window.open(app.url, "_blank");
   };
 
   const submit = async (event: React.FormEvent) => {
