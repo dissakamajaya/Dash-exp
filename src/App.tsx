@@ -161,6 +161,7 @@ export default function App() {
       return;
     }
     window.open(app.url, "_blank");
+    setLoading(false);
   };
 
   const submit = async (event: React.FormEvent) => {
@@ -178,7 +179,7 @@ export default function App() {
         setSelection((current) => ({ ...current, userId: value.staffId }));
       }
 
-      window.setTimeout(() => continueToDestination(selectedApp), 650);
+      continueToDestination(selectedApp!);
     } catch (error: unknown) {
       setAuthError(sessionError(error));
       setLoading(false);
