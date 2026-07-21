@@ -34,12 +34,32 @@ export default function AnimatedBackground({ accent, dark }: Props) {
     };
   }, []);
 
-  // Reference-style palette: pure-black canvas with vivid flowing color blobs.
+  // Reference palette: pure-black canvas with vivid flowing color blobs.
   const palette = dark
     ? ["#ff1f2c", "#ff6a1f", "#0feded", "#5b1bff", "#ff12a8"]
     : ["#c8222e", "#cc4f17", "#0a9b9b", "#3a1494", "#bf0f7e"];
   const base = dark ? "#000000" : "#07070a";
-  const grainOpacity = dark ? 0.7 : 0.55;
+  const grainOpacity = dark ? 0.45 : 0.4;
+
+  // 3-stop falloff helper — keeps the hue alive (not transparent) before going
+  // black. Bleeding color fields, not hard edges.
+  const blob = (
+    color: string,
+    x: string,
+    y: string,
+    rx: string,
+    ry: string,
+    alphaCore: string,
+    alphaMid: string,
+  ) =>
+    `radial-gradient(ellipse ${rx} ${ry} at ${x}% ${y}%, ${color}${alphaCore} 0%, ${color}${alphaMid} 38%, ${color}00 80%)`;
+
+  // Atmospheric hue wash — sits as its own underlay div so it only shows
+  // through gaps between blobs (NOT over all of black).
+  const atmosphere =
+    `radial-gradient(ellipse 65% 60% at 18% 78%, ${palette[0]}1f 0%, transparent 70%), ` +
+    `radial-gradient(ellipse 55% 50% at 86% 26%, ${palette[2]}26 0%, transparent 70%), ` +
+    `radial-gradient(ellipse 60% 40% at 50% 110%, ${palette[4]}1c 0%, transparent 70%)`;
 
   const rootStyle: BgStyle = {
     backgroundColor: base,
@@ -49,6 +69,15 @@ export default function AnimatedBackground({ accent, dark }: Props) {
 
   return (
     <div className="pointer-events-none fixed inset-0 overflow-hidden" style={rootStyle}>
+      {/* Atmospheric underlay — wide, low-alpha radial blobs in the same
+          diagonal flow as the main blobs. Sits below them. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: atmosphere,
+          opacity: dark ? 1 : 0.85,
+        }}
+      />
       <div
         ref={meshRef}
         className="absolute -inset-[12%]"
@@ -58,34 +87,40 @@ export default function AnimatedBackground({ accent, dark }: Props) {
           willChange: "transform",
         }}
       >
-        {/* Layer A: warm blobs (red/orange) drift slow */}
+        {/* Layer A: elongated warm blobs (red/orange) stretched along the
+            lower-left diagonal — pulled, not round. */}
         <div
           className="bg-liquid absolute inset-0"
           style={{
             backgroundImage: [
-              `radial-gradient(ellipse 32% 30% at 18% 28%, ${palette[0]}f2 0%, transparent 68%)`,
-              `radial-gradient(ellipse 32% 34% at 32% 72%, ${palette[1]}cc 0%, transparent 70%)`,
+              blob(palette[0], "14", "30", "42%", "26%", "ff", "6f"),
+              blob(palette[1], "30", "70", "48%", "30%", "d6", "55"),
             ].join(", "),
             animation: "bg-drift-a 28s ease-in-out infinite",
           }}
         />
-        {/* Layer B: cool blobs (cyan/violet) + accent drift opposite */}
+        {/* Layer B: cool blobs (teal/violet) along the upper-right diagonal,
+            full-saturation cores so the cool half actually reads. */}
         <div
           className="bg-liquid absolute inset-0"
           style={{
             backgroundImage: [
-              `radial-gradient(ellipse 30% 32% at 78% 24%, ${palette[2]}cc 0%, transparent 70%)`,
-              `radial-gradient(ellipse 34% 34% at 74% 70%, ${palette[3]}cc 0%, transparent 70%)`,
-              `radial-gradient(ellipse 24% 22% at 50% 50%, color-mix(in srgb, var(--bg-accent) 65%, transparent) 0%, transparent 78%)`,
+              blob(palette[2], "82", "20", "44%", "26%", "f0", "70"),
+              blob(palette[3], "76", "72", "46%", "30%", "c2", "44"),
+              blob("var(--bg-accent)", "58", "50", "32%", "22%", "aa", "33"),
             ].join(", "),
             animation: "bg-drift-b 34s ease-in-out infinite",
           }}
         />
-        {/* Layer C: hot magenta streak — the reference's signature tail */}
+        {/* Layer C: hot magenta streak — reference's signature tail along
+            the bottom edge with a wider, softer footprint. */}
         <div
           className="bg-liquid absolute inset-0"
           style={{
-            backgroundImage: `radial-gradient(ellipse 50% 18% at 55% 92%, ${palette[4]}80 0%, transparent 72%)`,
+            backgroundImage: [
+              blob(palette[4], "40", "88", "70%", "20%", "a8", "2a"),
+              blob(palette[4], "22", "82", "44%", "18%", "73", "1f"),
+            ].join(", "),
             animation: "bg-drift-a 41s ease-in-out infinite",
           }}
         />
