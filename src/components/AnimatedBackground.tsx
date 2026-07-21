@@ -40,7 +40,7 @@ export default function AnimatedBackground({ accent, dark }: Props) {
     : ["#ff2c3a", "#ff7a2a", "#11c4c4", "#5a30ff", "#ff1ab0"];
   // Dark canvas = pure black; light = warm cream matching the rest of the theme.
   const base = dark ? "#000000" : "#ece8e3";
-  const grainOpacity = dark ? 0.45 : 0.32;
+  const grainOpacity = 0.5;
 
   // 3-stop falloff helper. On dark, blobs keep hue in the falloff (color → color 00).
   // On light, the canvas is already light, so the outer stop is transparent.
@@ -53,40 +53,42 @@ export default function AnimatedBackground({ accent, dark }: Props) {
     alphaCore: string,
     alphaMid: string,
   ) => {
-    const mid = `${color}${alphaMid}`;
     const end = dark ? `${color}00` : `transparent`;
-    return `radial-gradient(ellipse ${rx} ${ry} at ${x}% ${y}%, ${color}${alphaCore} 0%, ${mid} 42%, ${end} 88%)`;
+    // Wider, softer falloff — mid stop at 58% keeps hue alive well into the
+    // bleed so adjacent blobs overlap and blend instead of stopping at hard edges.
+    return `radial-gradient(ellipse ${rx} ${ry} at ${x}% ${y}%, ${color}${alphaCore} 0%, ${color}${alphaMid} 58%, ${end} 100%)`;
   };
 
-  // Per-mode alpha pairs. Light needs near-full cores because the canvas is bright.
+  // Per-mode alpha pairs. Mid alpha bumped so hue holds well into the bleed,
+  // helping adjacent blobs overlap and merge as a continuous tonal field.
   const A = dark
     ? {
-        warmCore: "ff",
-        warmMid: "6f",
-        coolCore: "f0",
-        coolMid: "70",
-        vioCore: "c2",
-        vioMid: "44",
-        accCore: "aa",
-        accMid: "33",
-        tailCore: "a8",
-        tailMid: "2a",
-        tail2Core: "73",
-        tail2Mid: "1f",
-      }
-    : {
         warmCore: "ff",
         warmMid: "aa",
         coolCore: "ff",
         coolMid: "aa",
-        vioCore: "f0",
-        vioMid: "66",
-        accCore: "d6",
+        vioCore: "d6",
+        vioMid: "6f",
+        accCore: "c2",
         accMid: "5c",
-        tailCore: "d6",
-        tailMid: "3d",
-        tail2Core: "b3",
-        tail2Mid: "1a",
+        tailCore: "c2",
+        tailMid: "4d",
+        tail2Core: "8a",
+        tail2Mid: "2a",
+      }
+    : {
+        warmCore: "ff",
+        warmMid: "d6",
+        coolCore: "ff",
+        coolMid: "d6",
+        vioCore: "ff",
+        vioMid: "99",
+        accCore: "ea",
+        accMid: "80",
+        tailCore: "ea",
+        tailMid: "6f",
+        tail2Core: "c2",
+        tail2Mid: "30",
       };
 
   // Atmospheric underlay. Dark = low-alpha hue wash on black. Light = mid-alpha
@@ -121,36 +123,39 @@ export default function AnimatedBackground({ accent, dark }: Props) {
           willChange: "transform",
         }}
       >
-        {/* Layer A: elongated warm blobs (red/orange) along the lower-left diagonal */}
+        {/* Layer A: elongated warm blobs (red/orange), widened so they overlap
+            with each other and bleed into the magenta tail. */}
         <div
           className="bg-liquid absolute inset-0"
           style={{
             backgroundImage: [
-              blob(palette[0], "14", "30", "42%", "26%", A.warmCore, A.warmMid),
-              blob(palette[1], "30", "70", "48%", "30%", A.warmCore, A.warmMid),
+              blob(palette[0], "14", "28", "58%", "34%", A.warmCore, A.warmMid),
+              blob(palette[1], "32", "72", "62%", "40%", A.warmCore, A.warmMid),
             ].join(", "),
             animation: "bg-drift-a 28s ease-in-out infinite",
           }}
         />
-        {/* Layer B: cool blobs (teal/violet) along the upper-right diagonal */}
+        {/* Layer B: cool blobs (teal/violet), widened so the teal bleeds into
+            the violet and into the central accent wash. */}
         <div
           className="bg-liquid absolute inset-0"
           style={{
             backgroundImage: [
-              blob(palette[2], "82", "20", "44%", "26%", A.coolCore, A.coolMid),
-              blob(palette[3], "76", "72", "46%", "30%", A.vioCore, A.vioMid),
-              blob("var(--bg-accent)", "58", "50", "32%", "22%", A.accCore, A.accMid),
+              blob(palette[2], "82", "20", "58%", "34%", A.coolCore, A.coolMid),
+              blob(palette[3], "72", "74", "58%", "38%", A.vioCore, A.vioMid),
+              blob("var(--bg-accent)", "52", "50", "42%", "32%", A.accCore, A.accMid),
             ].join(", "),
             animation: "bg-drift-b 34s ease-in-out infinite",
           }}
         />
-        {/* Layer C: hot magenta streak — reference's signature bottom-edge tail */}
+        {/* Layer C: hot magenta streak — wider, runs the full bottom edge so
+            the warm + magenta fields merge along the lower diagonal. */}
         <div
           className="bg-liquid absolute inset-0"
           style={{
             backgroundImage: [
-              blob(palette[4], "40", "88", "70%", "20%", A.tailCore, A.tailMid),
-              blob(palette[4], "22", "82", "44%", "18%", A.tail2Core, A.tail2Mid),
+              blob(palette[4], "32", "92", "92%", "26%", A.tailCore, A.tailMid),
+              blob(palette[4], "18", "84", "58%", "22%", A.tail2Core, A.tail2Mid),
             ].join(", "),
             animation: "bg-drift-a 41s ease-in-out infinite",
           }}
