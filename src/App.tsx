@@ -14,8 +14,10 @@ import {
   USERS,
   type SelectorItem,
 } from "@/data/gateway";
+import { EASE_OUT, DURATION } from "@/lib/motion";
 
-const DEFAULT_ACCENT = "#818cf8";
+
+const DEFAULT_ACCENT = "#6075eb";
 
 type AccentStyle = CSSProperties & { "--accent": string };
 
@@ -68,7 +70,7 @@ function sessionError(error: unknown): SessionError {
 
 export default function App() {
   const { soundEnabled, toggleSound } = useCuelume();
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(false);
   const [selection, setSelection] = useState<SavedSelection>(loadSelection);
   const [session, setSession] = useState<Session | null>(null);
   const [authError, setAuthError] = useState<SessionError | null>(null);
@@ -81,6 +83,7 @@ export default function App() {
   const selectedApp = DESTINATIONS.find((item) => item.id === selection.appId) ?? null;
   const serverUser = session ? (USERS.find((item) => item.id === session.staffId) ?? null) : null;
   const selectedUser = serverUser ?? USERS.find((item) => item.id === selection.userId) ?? null;
+  const loginUser = selectedUser ?? USERS[0];
   const routeApp = DESTINATIONS.find((item) => item.route === route) ?? null;
   const hoveredItem = SELECTOR_ITEMS.find((item) => item.shapeIndex === hoveredIndex);
   const activeAccent = hoveredItem?.accent ?? selectedApp?.accent ?? selectedUser?.accent ?? DEFAULT_ACCENT;
@@ -165,7 +168,7 @@ export default function App() {
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!selectedApp || !selectedUser || (!session && !password)) return;
+    if (!selectedApp || !loginUser || (!session && !password)) return;
 
     play("loading");
     setLoading(true);
@@ -173,7 +176,7 @@ export default function App() {
 
     try {
       if (!session) {
-        const value = await localLogin(selectedUser.id, password);
+        const value = await localLogin(loginUser.id, password);
         setSession(value);
         setSelection((current) => ({ ...current, userId: value.staffId }));
       }
@@ -200,9 +203,9 @@ export default function App() {
         <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
         <main className="relative z-10 flex min-h-dvh items-center justify-center px-6 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: DURATION.medium, ease: EASE_OUT }}
           >
             <h1
               className="text-balance text-4xl font-medium sm:text-6xl"
@@ -232,7 +235,7 @@ export default function App() {
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: DURATION.slow, ease: EASE_OUT }}
           >
             <h1
               className="text-balance text-5xl font-medium sm:text-7xl"
@@ -285,11 +288,11 @@ export default function App() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full max-w-[470px]"
+          transition={{ duration: DURATION.medium, ease: EASE_OUT }}
+          className="w-full max-w-[470px] lg:max-w-[1200px]"
         >
           <ShapeGrid
-            items={SELECTOR_ITEMS}
+            items={SELECTOR_ITEMS.filter((item) => item.kind === "destination")}
             hoveredIndex={hoveredIndex}
             selectedIndices={selectedIndices}
             onHover={setHoveredIndex}
@@ -297,48 +300,96 @@ export default function App() {
             dark={dark}
           />
 
-          <AnimatePresence mode="wait">
-            {!(selectedApp && selectedUser) && (
+          <AnimatePresence mode="popLayout">
+            {!(selectedApp && (selectedUser || localLoginAvailable)) && (
               <motion.p
-                key={selectedApp ? "pick-user" : selectedUser ? "pick-app" : "pick-both"}
+                key={selectedApp ? "pending-user" : "pick-app"}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.35 }}
-                className="mt-5 text-center text-pretty text-xs"
+                transition={{ duration: DURATION.medium, ease: EASE_OUT }}
+                className="mt-14 text-center text-pretty text-xs sm:mt-20"
                 style={{ color: dark ? "rgba(255,255,255,.4)" : "rgba(0,0,0,.42)" }}
               >
-                {selectedApp
-                  ? "Sekarang pilih siapa kamu"
-                  : selectedUser
-                    ? "Sekarang pilih aplikasi tujuan"
-                    : "Pilih aplikasi & siapa kamu untuk masuk"}
+                {selectedApp ? "Sesi staf diperlukan untuk melanjutkan" : "Pilih aplikasi tujuan untuk masuk"}
               </motion.p>
             )}
           </AnimatePresence>
 
-          <AnimatePresence mode="wait">
-            {selectedApp && selectedUser && (
+          <AnimatePresence mode="popLayout">
+            {selectedApp && (selectedUser || localLoginAvailable) && (
               <motion.div
-                key={`${selectedApp.id}-${selectedUser.id}`}
+                key={`${selectedApp.id}-${loginUser.id}`}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
-                transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-5"
+                transition={{ duration: DURATION.medium, ease: EASE_OUT }}
+                className="mt-14 sm:mt-20"
                 onClick={(event) => event.stopPropagation()}
               >
-                <h1
-                  className="text-balance text-center text-base font-medium transition-colors duration-500 sm:text-lg"
-                  style={{ color: dark ? "#ffffff" : "#171717" }}
-                >
-                  {selectedUser.name},{" "}
-                  <span style={{ color: dark ? "rgba(255,255,255,.42)" : "rgba(0,0,0,.4)" }}>
-                    selamat datang
-                  </span>
-                </h1>
-
-                <form onSubmit={submit} className="mx-auto mt-5 max-w-[240px] space-y-3">
+                <form onSubmit={submit} className="mx-auto max-w-[320px] space-y-3">
+                  <div className="flex items-center justify-center gap-3">
+                    <h1
+                      className="text-balance text-center text-base font-medium transition-colors duration-500 sm:text-lg"
+                      style={{ color: dark ? "#ffffff" : "#171717" }}
+                    >
+                      {selectedApp.name}
+                    </h1>
+                    <motion.button
+                      type="submit"
+                      disabled={loading || (!session && !password)}
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
+                      aria-label={loading ? "Memuat" : session ? `Buka ${selectedApp.name}` : "Masuk"}
+                      className={
+                        session
+                          ? "flex size-8 shrink-0 items-center justify-center rounded-lg border transition-colors disabled:opacity-60"
+                          : "shrink-0 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-opacity disabled:opacity-60"
+                      }
+                      style={
+                        session
+                          ? {
+                              borderColor: dark ? "rgba(255,255,255,.12)" : "rgba(0,0,0,.12)",
+                              backgroundColor: dark ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.05)",
+                              color: dark ? "#fff" : "#171717",
+                            }
+                          : { backgroundColor: dark ? "#000" : "#111" }
+                      }
+                    >
+                      {session ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path
+                            d="M5 12h13M13 6l6 6-6 6"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : loading ? (
+                        "Memuat..."
+                      ) : (
+                        "Masuk"
+                      )}
+                    </motion.button>
+                  </div>
+                  {!session && (
+                    <label className="block text-left text-xs" style={{ color: dark ? "rgba(255,255,255,.58)" : "rgba(0,0,0,.55)" }}>
+                      <span className="sr-only">Pilih staf</span>
+                      <select
+                        value={selectedUser?.id ?? loginUser.id}
+                        onChange={(event) => setSelection((current) => ({ ...current, userId: matchingUserId(event.target.value) }))}
+                        className="gateway-input w-full rounded-xl px-4 py-2.5 text-sm outline-none backdrop-blur-sm transition-colors duration-300"
+                        style={{
+                          border: `1px solid ${dark ? "rgba(255,255,255,.12)" : "rgba(0,0,0,.12)"}`,
+                          backgroundColor: dark ? "rgba(255,255,255,.05)" : "rgba(255,255,255,.34)",
+                          color: dark ? "#fff" : "#171717",
+                        }}
+                      >
+                        {USERS.map((user) => <option key={user.id} value={user.id}>{user.name}</option>)}
+                      </select>
+                    </label>
+                  )}
                   {!session && (
                     <input
                       type="password"
@@ -347,7 +398,7 @@ export default function App() {
                       placeholder="Kata sandi"
                       autoFocus
                       required
-                      className="gateway-input w-full rounded-xl px-4 py-2.5 text-sm outline-none backdrop-blur-sm transition-all duration-300"
+                      className="gateway-input w-full rounded-xl px-4 py-2.5 text-sm outline-none backdrop-blur-sm transition-colors duration-300"
                       style={{
                         border: `1px solid ${dark ? "rgba(255,255,255,.12)" : "rgba(0,0,0,.12)"}`,
                         backgroundColor: dark ? "rgba(255,255,255,.05)" : "rgba(255,255,255,.34)",
@@ -360,16 +411,6 @@ export default function App() {
                       {authError.message}
                     </p>
                   )}
-                  <motion.button
-                    type="submit"
-                    disabled={loading || (!session && !password)}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-opacity disabled:opacity-60"
-                    style={{ backgroundColor: dark ? "#000" : "#111" }}
-                  >
-                    {loading ? "Memuat..." : session ? "Buka" : "Masuk"}
-                  </motion.button>
                 </form>
               </motion.div>
             )}

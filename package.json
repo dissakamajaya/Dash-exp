@@ -12,6 +12,7 @@
     "deploy": "bun run build && wrangler deploy"
   },
   "dependencies": {
+    "@paper-design/shaders-react": "0.0.76",
     "clsx": "2.1.1",
     "cuelume": "^0.1.2",
     "jose": "^6.2.3",

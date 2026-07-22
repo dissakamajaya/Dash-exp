@@ -47,7 +47,7 @@ body {
   transition: background-color 0.5s ease, color 0.5s ease;
 }
 
-/* Dark (default) */
+/* Dark */
 .dark body {
   background: #06070e;
   color: #fff;
@@ -74,38 +74,6 @@ body {
   color: rgba(0, 0, 0, 0.34);
 }
 
-/* Animated liquid background — transform-only keyframes, GPU-composited */
-@property --bg-accent {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #818cf8;
-}
-
-@keyframes bg-drift-a {
-  0%,
-  100% {
-    transform: translate3d(-4%, -3%, 0) rotate(-2.5deg) scale(1);
-  }
-  50% {
-    transform: translate3d(4%, 3%, 0) rotate(3deg) scale(1.12);
-  }
-}
-
-@keyframes bg-drift-b {
-  0%,
-  100% {
-    transform: translate3d(3%, 4%, 0) rotate(2.5deg) scale(1.08);
-  }
-  50% {
-    transform: translate3d(-4%, -3%, 0) rotate(-3deg) scale(1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bg-liquid {
-    animation: none !important;
-  }
-}
 
 * {
   scrollbar-width: thin;
