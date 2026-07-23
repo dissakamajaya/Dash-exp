@@ -529,7 +529,7 @@ export function createAsciify(
   return {
     setOptions(next) {
       Object.assign(config, next);
-      syncBacking();
+      if (config.background === "auto") syncBacking();
       start();
     },
     resize() {
@@ -591,11 +591,12 @@ export function Asciify({
     const content = contentRef.current;
     const output = outputRef.current;
     if (!source || !content || !output) return;
+    if (!native) return;
     instanceRef.current = createAsciify(
       { source, content, output },
       initialOptions,
     );
-    if (native && !instanceRef.current) setFailed(true);
+    if (!instanceRef.current) setFailed(true);
     return () => {
       instanceRef.current?.destroy();
       instanceRef.current = null;
