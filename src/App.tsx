@@ -1,7 +1,8 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { play } from "cuelume";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import Asciify from "@/components/Asciify";
 import ShapeGrid from "@/components/ShapeGrid";
 import SoundToggle from "@/components/SoundToggle";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -18,8 +19,16 @@ import { EASE_OUT, DURATION } from "@/lib/motion";
 
 const DEFAULT_ACCENT = "#6075eb";
 
-type AccentStyle = CSSProperties & { "--accent": string };
+function accentToRgb(hex: string): [number, number, number] {
+  const value = hex.replace("#", "");
+  return [
+    parseInt(value.slice(0, 2), 16) / 255,
+    parseInt(value.slice(2, 4), 16) / 255,
+    parseInt(value.slice(4, 6), 16) / 255,
+  ];
+}
 
+type AccentStyle = CSSProperties & { "--accent": string };
 type SavedSelection = {
   appId: string | null;
   userId: Session["staffId"] | null;
@@ -95,7 +104,9 @@ export default function App() {
   const loginUser = selectedUser ?? USERS[0];
   const routeApp = DESTINATIONS.find((item) => item.route === route) ?? null;
   const hoveredItem = DESTINATIONS.find((item) => item.shapeIndex === hoveredIndex);
+
   const activeAccent = hoveredItem?.accent ?? selectedApp?.accent ?? selectedUser?.accent ?? DEFAULT_ACCENT;
+  const accentRgb = useMemo(() => accentToRgb(activeAccent), [activeAccent]);
   const selectedIndices = [selectedApp?.shapeIndex, selectedUser?.shapeIndex].filter(
     (value): value is string => value !== undefined,
   );
@@ -292,14 +303,26 @@ export default function App() {
           transition={{ duration: DURATION.medium, ease: EASE_OUT }}
           className="w-full max-w-[470px] lg:max-w-[1200px]"
         >
-          <ShapeGrid
-            items={DESTINATIONS}
-            hoveredIndex={hoveredIndex}
-            selectedIndices={selectedIndices}
-            onHover={setHoveredIndex}
-            onSelect={selectItem}
-            dark={dark}
-          />
+          <Asciify
+            radius={0.18}
+            scale={3}
+            spacing={1}
+            charset="blocks"
+            softness={0.7}
+            followSpeed={4}
+            background={accentRgb}
+            style={{ borderRadius: 24, overflow: "hidden" }}
+          >
+            <ShapeGrid
+              items={DESTINATIONS}
+              hoveredIndex={hoveredIndex}
+              selectedIndices={selectedIndices}
+              onHover={setHoveredIndex}
+              onSelect={selectItem}
+              dark={dark}
+            />
+          </Asciify>
+
 
           <AnimatePresence mode="popLayout">
             {!(selectedApp && (selectedUser || localLoginAvailable)) && (
