@@ -48,16 +48,16 @@ async function handleSession(request: Request, env: WorkerEnv): Promise<Response
 }
 
 async function handleLocalLogin(request: Request, env: WorkerEnv): Promise<Response> {
-  assertLocalEndpoint(request, env);
+  assertLocalEndpoint(env);
   if (request.method !== "POST") return jsonResponse({ error: "method_not_allowed", message: "Method not allowed." }, 405);
   const body = await readLoginBody(request);
   if (!body) return jsonResponse({ error: "invalid_login_body", message: "Invalid login request." }, 400);
-  const { identity, cookie } = await verifyLocalLogin(request, env, body.staffId, body.password);
+  const { identity, cookie } = await verifyLocalLogin(env, body.staffId, body.password);
   return jsonResponse(publicSession(identity), 200, { "Set-Cookie": cookie });
 }
 
 function handleLocalLogout(request: Request, env: WorkerEnv): Response {
-  assertLocalEndpoint(request, env);
+  assertLocalEndpoint(env);
   if (request.method !== "POST") return jsonResponse({ error: "method_not_allowed", message: "Method not allowed." }, 405);
   return new Response(null, {
     status: 204,
@@ -73,17 +73,26 @@ function failureResponse(error: unknown): Response {
   return jsonResponse({ error: "internal_error", message: "Internal server error." }, 500);
 }
 
+export async function handleFetch(
+  request: Request,
+  env: WorkerEnv,
+  assetsFetch: (request: Request) => Promise<Response>,
+): Promise<Response> {
+  const url = new URL(request.url);
+
+  try {
+    if (url.pathname === "/api/session") return await handleSession(request, env);
+    if (url.pathname === "/api/session/login") return await handleLocalLogin(request, env);
+    if (url.pathname === "/api/session/logout") return handleLocalLogout(request, env);
+    return assetsFetch(request);
+  } catch (error) {
+    return failureResponse(error);
+  }
+}
+
+
 export default {
   async fetch(request: Request, env: WorkerEnv): Promise<Response> {
-    const url = new URL(request.url);
-
-    try {
-      if (url.pathname === "/api/session") return await handleSession(request, env);
-      if (url.pathname === "/api/session/login") return await handleLocalLogin(request, env);
-      if (url.pathname === "/api/session/logout") return handleLocalLogout(request, env);
-      return env.ASSETS.fetch(request);
-    } catch (error) {
-      return failureResponse(error);
-    }
+    return handleFetch(request, env, (assetRequest) => env.ASSETS.fetch(assetRequest));
   },
 } satisfies ExportedHandler<WorkerEnv>;

@@ -9,10 +9,9 @@ import { useCuelume } from "@/hooks/useCuelume";
 import { getSession, localLogin, SessionError, type Session } from "@/lib/session";
 import {
   DESTINATIONS,
-  SELECTOR_ITEMS,
   STORAGE_KEY,
   USERS,
-  type SelectorItem,
+  type Destination,
 } from "@/data/gateway";
 import { EASE_OUT, DURATION } from "@/lib/motion";
 
@@ -50,6 +49,16 @@ function loadSelection(): SavedSelection {
   }
 }
 
+export function persistSelection(selection: SavedSelection, session: Session | null): void {
+  if (!session) return;
+  try {
+    if (!selection.appId && !selection.userId) localStorage.removeItem(STORAGE_KEY);
+    else localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
+  } catch {
+    // The gateway still works when storage is unavailable.
+  }
+}
+
 function readRoute() {
   return window.location.hash.slice(1).split("?")[0] || "/";
 }
@@ -71,11 +80,11 @@ function sessionError(error: unknown): SessionError {
 export default function App() {
   const { soundEnabled, toggleSound } = useCuelume();
   const [dark, setDark] = useState(false);
-  const [selection, setSelection] = useState<SavedSelection>(loadSelection);
+  const [selection, setSelection] = useState<SavedSelection>({ appId: null, userId: null });
   const [session, setSession] = useState<Session | null>(null);
   const [authError, setAuthError] = useState<SessionError | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [route, setRoute] = useState(readRoute);
@@ -85,10 +94,10 @@ export default function App() {
   const selectedUser = serverUser ?? USERS.find((item) => item.id === selection.userId) ?? null;
   const loginUser = selectedUser ?? USERS[0];
   const routeApp = DESTINATIONS.find((item) => item.route === route) ?? null;
-  const hoveredItem = SELECTOR_ITEMS.find((item) => item.shapeIndex === hoveredIndex);
+  const hoveredItem = DESTINATIONS.find((item) => item.shapeIndex === hoveredIndex);
   const activeAccent = hoveredItem?.accent ?? selectedApp?.accent ?? selectedUser?.accent ?? DEFAULT_ACCENT;
   const selectedIndices = [selectedApp?.shapeIndex, selectedUser?.shapeIndex].filter(
-    (value): value is number => value !== undefined,
+    (value): value is string => value !== undefined,
   );
   const localLoginAvailable = shouldOfferLocalLogin(window.location.hostname, session, authError);
   const blockedByAuth = !authLoading && !session && authError && !localLoginAvailable;
@@ -100,13 +109,8 @@ export default function App() {
   }, [dark]);
 
   useEffect(() => {
-    try {
-      if (!selection.appId && !selection.userId) localStorage.removeItem(STORAGE_KEY);
-      else localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
-    } catch {
-      // The gateway still works when storage is unavailable.
-    }
-  }, [selection]);
+    persistSelection(selection, session);
+  }, [selection, session]);
 
   useEffect(() => {
     const onHashChange = () => setRoute(readRoute());
@@ -122,7 +126,8 @@ export default function App() {
         if (cancelled) return;
         setSession(value);
         setAuthError(null);
-        setSelection((current) => ({ ...current, userId: value.staffId }));
+        const saved = loadSelection();
+        setSelection({ ...saved, userId: value.staffId });
       })
       .catch((error: unknown) => {
         if (cancelled) return;
@@ -137,15 +142,10 @@ export default function App() {
     };
   }, []);
 
-  const selectItem = (item: SelectorItem) => {
+  const selectItem = (item: Destination) => {
     play(item.cue);
-    if (item.kind === "user" && session) return;
     setAuthError((current) => (current?.code === "invalid_local_login" ? null : current));
-    setSelection((current) => {
-      if (item.kind === "destination") return { ...current, appId: item.id };
-      const userId = matchingUserId(item.id);
-      return { ...current, userId: userId ?? current.userId };
-    });
+    setSelection((current) => ({ ...current, appId: item.id }));
   };
 
   const clearSelection = () => {
@@ -189,7 +189,7 @@ export default function App() {
     }
   };
 
-  if (authLoading || blockedByAuth) {
+  if (authLoading || (blockedByAuth && !routeApp?.comingSoon)) {
     const visibleAuthError = authError ?? new SessionError(500, "session_request_failed", "Session request failed.");
     const accentStyle: AccentStyle = { "--accent": activeAccent };
     const title = authLoading ? "Memeriksa sesi" : visibleAuthError.status === 503 ? "Konfigurasi belum lengkap" : "Akses ditolak";
@@ -224,7 +224,7 @@ export default function App() {
     );
   }
 
-  if (routeApp && session) {
+  if (routeApp && (session || routeApp.comingSoon)) {
     const accentStyle: AccentStyle = { "--accent": routeApp.accent };
 
     return (
@@ -293,7 +293,7 @@ export default function App() {
           className="w-full max-w-[470px] lg:max-w-[1200px]"
         >
           <ShapeGrid
-            items={SELECTOR_ITEMS.filter((item) => item.kind === "destination")}
+            items={DESTINATIONS}
             hoveredIndex={hoveredIndex}
             selectedIndices={selectedIndices}
             onHover={setHoveredIndex}

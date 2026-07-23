@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A React single-page gateway for the House of Exp ecosystem. Users select their identity (shape grid), authenticate, then navigate to one of six sub-applications. Deployed on Cloudflare Workers with static asset serving.
+A React single-page gateway for the House of Exp ecosystem. Users select a destination shape, choose a staff identity from the login form, authenticate, then open one of seven ecosystem applications. Deployed on Cloudflare Workers with static asset serving.
 
 ## Tech Stack
 
@@ -21,14 +21,15 @@ src/
 ├── App.tsx                  # Main gateway component (auth, routing, selection state)
 ├── components/
 │   ├── AnimatedBackground.tsx  # Mesh gradient with mouse parallax
-│   ├── ShapeGrid.tsx          # 3×3 grid of SVG shapes (6 destinations + 3 users)
+│   ├── ShapeGrid.tsx          # Destination SVG buttons backed by a shape registry
 │   ├── SoundToggle.tsx        # Audio on/off control
 │   └── ThemeToggle.tsx        # Dark/light mode toggle
 ├── data/
-│   └── gateway.ts             # DESTINATIONS, USERS, SELECTOR_ITEMS constants
+│   └── gateway.ts             # DESTINATIONS, USERS, and storage key
 ├── hooks/
 │   └── useCuelume.ts          # Sound system hook
 ├── lib/
+│   ├── motion.ts              # Shared motion tokens
 │   └── session.ts             # Session types, getSession(), localLogin()
 └── utils/
 worker/
@@ -38,13 +39,15 @@ worker/
 └── types.ts                   # Shared types (StaffId, WorkerEnv, AuthFailure)
 ```
 
+Implementation plans and their status live in `plans/README.md`.
+
 ## User Flow
 
 1. Gateway loads → checks session via `GET /api/session`
 2. If no session → shows auth error or local login form (localhost only)
-3. User selects a destination shape (6 apps) and user shape (3 staff)
+3. User selects a destination shape, then chooses a staff identity in the form
 4. Password input appears → user authenticates
-5. Redirect to selected app's production URL
+5. Active destinations open in a new tab; coming-soon destinations show an in-gateway splash route
 
 ## Authentication Strategy
 
@@ -56,14 +59,13 @@ The `shouldOfferLocalLogin()` helper in App.tsx detects when to show the local l
 
 ## Applications in Ecosystem
 
-| App | ID | URL | Accent | Status |
-|-----|----|-----|--------|--------|
-| Studio | `studio` | studio.houseofexp.com | `#a78bfa` | Active |
-| Finance | `finance` | finance.houseofexp.com | `#f472b6` | Active |
-| Rental | `rental` | rental.houseofexp.com | `#38bdf8` | Coming Soon |
-| Website Admin | `admin` | houseofexp.com/edit/ | `#fb923c` | Active |
-| Client Portal | `client` | client.houseofexp.com | `#2dd4bf` | Active |
-| Academy | `academy` | academy.houseofexp.com | `#facc15` | Coming Soon |
+| Portal | `portal` | client.houseofexp.com/admin | `#9360eb` | Active |
+| Journal | `journal` | finance.houseofexp.com | `#eb609f` | Active |
+| Rental | `rental` | rental.houseofexp.com | `#60bfeb` | Coming Soon |
+| StudioStaff® | `studiostaff` | studio.houseofexp.com | `#eb9f60` | Active |
+| Academy | `academy` | academy.houseofexp.com | `#ebcb60` | Coming Soon |
+| Research | `research` | — | `#60ebd0` | Coming Soon |
+| House Admin | `admin` | houseofexp.com/edit/ | `#6075eb` | Active |
 
 ## Staff Users
 
@@ -75,13 +77,13 @@ The `shouldOfferLocalLogin()` helper in App.tsx detects when to show the local l
 
 ## Design Conventions
 
-- **Shape-based identity**: Each app and user has a unique SVG shape icon (sunburst, waffle grid, horizon, etc.)
-- **Accent-reactive UI**: Background mesh gradient, glow effects, and text color shift based on hovered/selected item
-- **Dark-first**: Default dark theme with light toggle; palette switches at system level
-- **Motion**: Spring-based hover/select animations; pulse animation on user shapes when destination is selected but no user chosen
+- **Shape-based identity**: Each destination has a unique SVG shape registered by stable string ID in `ShapeGrid.tsx`; staff identity is selected in the login form
+- **Accent-reactive UI**: Background mesh gradient, glow effects, and text color shift based on hovered/selected destination
+- **Theme**: Default light theme with a dark/light toggle; palette switches at system level
+- **Motion**: Spring-based hover/select animations; idle destination icons pulse when nothing is selected
 - **Sound cues**: Each item has a unique cuelume sound; global toggle persists preference
 - **Indonesian UI text**: Labels use Bahasa Indonesia ("Masuk", "Buka", "Selamat datang", etc.)
-- **Selection persistence**: `localStorage` under key `hox-gateway-selection` stores last `{ appId, userId }`
+- **Selection persistence**: Authenticated sessions persist `localStorage` under key `hox-gateway-selection`; unauthenticated selections remain in memory
 
 ## API Endpoints
 

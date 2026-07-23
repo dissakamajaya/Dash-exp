@@ -253,4 +253,24 @@ describe("gateway auth worker", () => {
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toMatchObject({ error: "missing_access_assertion" });
   });
+
+  test("missing Access team domain is a typed configuration failure", async () => {
+    const response = await worker.fetch(
+      new Request("https://gateway.houseofexp.com/api/session"),
+      { ...accessEnv, ACCESS_TEAM_DOMAIN: undefined },
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({ error: "missing_access_team_domain" });
+  });
+
+  test("missing Access audience is a typed configuration failure", async () => {
+    const response = await worker.fetch(
+      new Request("https://gateway.houseofexp.com/api/session"),
+      { ...accessEnv, ACCESS_AUDIENCE: undefined },
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({ error: "missing_access_audience" });
+  });
 });

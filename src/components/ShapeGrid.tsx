@@ -1,12 +1,13 @@
-import { motion } from "motion/react"
-import type { SelectorItem } from "@/data/gateway";
+import { motion } from "motion/react";
+import type { ComponentType } from "react";
+import type { Destination } from "@/data/gateway";
 
 interface ShapeGridProps {
-  items: SelectorItem[];
-  hoveredIndex: number | null;
-  selectedIndices: number[];
-  onHover: (index: number | null) => void;
-  onSelect: (item: SelectorItem) => void;
+  items: Destination[];
+  hoveredIndex: string | null;
+  selectedIndices: string[];
+  onHover: (index: string | null) => void;
+  onSelect: (item: Destination) => void;
   dark: boolean;
 }
 
@@ -107,15 +108,15 @@ function AdminShape() {
 
 
 
-const SHAPES = [
-  PortalShape,
-  JournalShape,
-  RentalShape,
-  StudioStaffShape,
-  AcademyShape,
-  ResearchShape,
-  AdminShape,
-];
+export const SHAPE_REGISTRY: Record<string, ComponentType> = {
+  portal: PortalShape,
+  journal: JournalShape,
+  rental: RentalShape,
+  studiostaff: StudioStaffShape,
+  academy: AcademyShape,
+  research: ResearchShape,
+  admin: AdminShape,
+};
 
 export default function ShapeGrid({
   items,
@@ -127,14 +128,14 @@ export default function ShapeGrid({
 }: ShapeGridProps) {
   const baseColor = dark ? "#ffffff" : "#171717";
   const hasSelectedDestination = selectedIndices.some((index) =>
-    items.some((item) => item.shapeIndex === index && item.kind === "destination"),
+    items.some((item) => item.shapeIndex === index),
   );
   const idle = !hasSelectedDestination && hoveredIndex === null;
 
   return (
     <div className="grid grid-cols-3 gap-x-3 gap-y-1 sm:gap-x-6 sm:gap-y-2 lg:flex lg:flex-nowrap lg:items-start lg:justify-center lg:gap-x-14 lg:gap-y-0">
-      {items.map((item) => {
-        const Shape = SHAPES[item.shapeIndex];
+      {items.map((item, index) => {
+        const Shape = SHAPE_REGISTRY[item.shapeIndex];
         const hovered = hoveredIndex === item.shapeIndex;
         const selected = selectedIndices.includes(item.shapeIndex);
         const active = hovered || selected;
@@ -143,15 +144,14 @@ export default function ShapeGrid({
         const muted = hasSelectedDestination && !selected;
         const opacity = idle ? 0.16 : hovered ? 1 : selected ? 0.92 : muted ? 0.1 : anotherHovered ? 0.11 : 0.24;
 
-
         return (
           <motion.button
-            key={`${item.kind}-${item.id}`}
+            key={item.id}
             type="button"
             data-cuelume-hover="tick"
             data-cuelume-press
             data-cuelume-release
-            aria-label={item.kind === "user" ? `Select user ${item.name}` : `Select ${item.name}`}
+            aria-label={`Select ${item.name}`}
             aria-pressed={selected}
             whileTap={{ scale: 0.97 }}
             onMouseEnter={() => onHover(item.shapeIndex)}
@@ -180,8 +180,8 @@ export default function ShapeGrid({
                 ? {
                     opacity: { duration: 0.2 },
                     color: { duration: 0.2 },
-                    scale: { duration: 3.6, repeat: Infinity, ease: "easeInOut", delay: item.shapeIndex * 0.12 },
-                    filter: { duration: 3.6, repeat: Infinity, ease: "easeInOut", delay: item.shapeIndex * 0.12 },
+                    scale: { duration: 3.6, repeat: Infinity, ease: "easeInOut", delay: index * 0.12 },
+                    filter: { duration: 3.6, repeat: Infinity, ease: "easeInOut", delay: index * 0.12 },
                   }
                 : { type: "spring", stiffness: 290, damping: 24 }
             }

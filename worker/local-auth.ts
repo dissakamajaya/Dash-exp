@@ -70,7 +70,7 @@ async function hmac(data: string, secret: string): Promise<Uint8Array> {
   return new Uint8Array(signature);
 }
 
-export function assertLocalEndpoint(request: Request, env: WorkerEnv): void {
+export function assertLocalEndpoint(env: WorkerEnv): void {
   if (env.ENVIRONMENT !== "local" || env.AUTH_MODE !== "local") {
     throw new AuthFailure(404, "local_auth_unavailable", "Local auth is not available.");
   }
@@ -199,7 +199,7 @@ export async function createLocalPasswordVerifier(
 }
 
 export async function getLocalIdentity(request: Request, env: WorkerEnv): Promise<StaffIdentity | null> {
-  assertLocalEndpoint(request, env);
+  assertLocalEndpoint(env);
   const token = parseCookie(request.headers.get("Cookie"))[COOKIE_NAME];
   if (!token) return null;
   const claims = await verifySignedSession(token, env);
@@ -208,12 +208,11 @@ export async function getLocalIdentity(request: Request, env: WorkerEnv): Promis
 }
 
 export async function verifyLocalLogin(
-  request: Request,
   env: WorkerEnv,
   staffId: StaffId,
   password: string,
 ): Promise<{ identity: StaffIdentity; cookie: string }> {
-  assertLocalEndpoint(request, env);
+  assertLocalEndpoint(env);
   const verifier = parseVerifiers(env).get(staffId);
   if (!verifier) throw new AuthFailure(401, "invalid_local_login", "Invalid staff ID or password.");
   const attemptedHash = await pbkdf2(password, base64UrlDecode(verifier.salt), verifier.iterations);

@@ -2,14 +2,15 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { ReactNode } from "react";
 import type * as ReactModule from "react";
-import type { SelectorItem } from "./data/gateway";
+import { SessionError } from "./lib/session";
+import type { Destination } from "./data/gateway";
 
 const harness = vi.hoisted(() => ({
   play: vi.fn(),
   stateIndex: 0,
   stateValues: [] as unknown[],
   setters: [] as Array<(value: unknown) => void>,
-  onSelect: undefined as ((item: SelectorItem) => void) | undefined,
+  onSelect: undefined as ((item: Destination) => void) | undefined,
 }));
 
 vi.mock("react", async () => {
@@ -43,7 +44,7 @@ vi.mock("@/hooks/useCuelume", () => ({
 }));
 vi.mock("@/components/AnimatedBackground", () => ({ default: () => <div data-component="background" /> }));
 vi.mock("@/components/ShapeGrid", () => ({
-  default: ({ onSelect }: { onSelect: (item: SelectorItem) => void }) => {
+  default: ({ onSelect }: { onSelect: (item: Destination) => void }) => {
     harness.onSelect = onSelect;
     return <div data-component="shape-grid" />;
   },
@@ -75,18 +76,38 @@ beforeEach(() => {
   });
 });
 
-const [{ default: App }, { SELECTOR_ITEMS }] = await Promise.all([import("./App"), import("./data/gateway")]);
+const [{ default: App }, { DESTINATIONS }] = await Promise.all([import("./App"), import("./data/gateway")]);
 
 describe("authenticated selector behavior", () => {
-  test("plays a user cue even when the server session blocks user reassignment", () => {
+  test("selecting a destination plays its cue and updates selection", () => {
     renderToStaticMarkup(<App />);
-    const dissa = SELECTOR_ITEMS.find((item) => item.id === "dissa");
+    const portal = DESTINATIONS.find((item) => item.id === "portal");
 
-    expect(dissa).toBeDefined();
+    expect(portal).toBeDefined();
     expect(harness.onSelect).toBeDefined();
-    harness.onSelect?.(dissa as SelectorItem);
+    harness.onSelect?.(portal as Destination);
 
-    expect(harness.play).toHaveBeenCalledWith("ready");
-    expect(harness.setters[1]).not.toHaveBeenCalled();
+    expect(harness.play).toHaveBeenCalledWith("sparkle");
+    expect(harness.setters[1]).toHaveBeenCalled();
+  });
+
+  test("renders coming-soon routes before authentication completes", () => {
+    harness.stateValues[2] = null;
+    harness.stateValues[8] = "/rental";
+
+    const html = renderToStaticMarkup(<App />);
+
+    expect(html).toContain("Rental");
+    expect(html).toContain("Segera hadir");
+  });
+  test("keeps active routes behind authentication", () => {
+    harness.stateValues[2] = null;
+    harness.stateValues[3] = new SessionError(401, "missing_access_assertion", "Missing Access assertion.");
+    harness.stateValues[8] = "/portal";
+
+    const html = renderToStaticMarkup(<App />);
+
+    expect(html).toContain("Akses ditolak");
+    expect(html).not.toContain("Portal");
   });
 });
