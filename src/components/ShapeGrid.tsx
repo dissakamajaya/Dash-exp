@@ -142,7 +142,7 @@ export default function ShapeGrid({
         const anotherHovered = hoveredIndex !== null && !hovered;
 
         const muted = hasSelectedDestination && !selected;
-        const opacity = idle ? 0.16 : hovered ? 1 : selected ? 0.92 : muted ? 0.1 : anotherHovered ? 0.11 : 0.24;
+        const opacity = idle ? 0.16 : hovered ? 1 : selected ? 0.95 : muted ? 0.25 : anotherHovered ? 0.3 : 0.7;
 
         return (
           <motion.button
