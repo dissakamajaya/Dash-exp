@@ -34,6 +34,7 @@ export const DESTINATIONS: Destination[] = [
   { id: "academy", name: "Academy", shapeIndex: "academy", accent: "#ebcb60", route: "/academy", url: "https://academy.houseofexp.com/", comingSoon: true, cue: "chime" },
   { id: "research", name: "Research", shapeIndex: "research", accent: "#60ebd0", route: "/research", url: "", comingSoon: true, cue: "bloom" },
   { id: "admin", name: "House Admin", shapeIndex: "admin", accent: "#6075eb", route: "/house-admin", url: "https://houseofexp.com/edit/", cue: "ready" },
+  { id: "crm", name: "CRM", shapeIndex: "crm", accent: "#7deb60", route: "/crm", url: "https://crm.houseofexp.com", cue: "success" },
 ];
 
 export const STAFF_IDS = ["aldi", "dissa", "bil"] as const satisfies readonly StaffId[];

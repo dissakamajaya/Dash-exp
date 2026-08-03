@@ -106,6 +106,19 @@ function AdminShape() {
   );
 }
 
+/** CRM — customer relationship network. */
+function CrmShape() {
+  return (
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="h-full w-full" aria-hidden="true">
+      <path d="M50 50 L50 20 M50 50 L75.98 65 M50 50 L24.02 65" stroke="currentColor" strokeWidth="4" strokeLinecap="round" fill="none" />
+      <circle cx="50" cy="50" r="10" fill="currentColor" />
+      <circle cx="50" cy="20" r="8" fill="currentColor" />
+      <circle cx="75.98" cy="65" r="8" fill="currentColor" />
+      <circle cx="24.02" cy="65" r="8" fill="currentColor" />
+    </svg>
+  );
+}
+
 
 
 export const SHAPE_REGISTRY: Record<string, ComponentType> = {
@@ -116,6 +129,7 @@ export const SHAPE_REGISTRY: Record<string, ComponentType> = {
   academy: AcademyShape,
   research: ResearchShape,
   admin: AdminShape,
+  crm: CrmShape,
 };
 
 export default function ShapeGrid({

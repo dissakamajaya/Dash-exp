@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A React single-page gateway for the House of Exp ecosystem. Users select a destination shape, choose a staff identity from the login form, authenticate, then open one of seven ecosystem applications. Deployed on Cloudflare Workers with static asset serving.
+A React single-page gateway for the House of Exp ecosystem. Users select a destination shape, choose a staff identity from the login form, authenticate, then open one of eight ecosystem applications. Deployed on Cloudflare Workers with static asset serving.
 
 ## Tech Stack
 
@@ -66,6 +66,7 @@ The `shouldOfferLocalLogin()` helper in App.tsx detects when to show the local l
 | Academy | `academy` | academy.houseofexp.com | `#ebcb60` | Coming Soon |
 | Research | `research` | — | `#60ebd0` | Coming Soon |
 | House Admin | `admin` | houseofexp.com/edit/ | `#6075eb` | Active |
+| CRM | `crm` | crm.houseofexp.com | `#7deb60` | Active |
 
 ## Staff Users
 
