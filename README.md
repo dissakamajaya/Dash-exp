@@ -70,6 +70,13 @@ Local dev auth uses cookie-based sessions (`AUTH_MODE=local`); production uses C
 
 See [`AGENTS.md`](./AGENTS.md) for architecture, API routes, and design conventions.
 
+## Secrets
+
+The ecosystem-wide secret registry lives in [`SECRETS.md`](./SECRETS.md) — every secret
+across website / Studio / Finance / CRM / Vault, where it lives, and its rotation date
+(values never go in the file). Run `bun run secret-audit` to flag overdue or untracked
+rotations (exit 1 when anything is overdue — CI/cron gate).
+
 ## License
 
 *To be determined*
