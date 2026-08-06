@@ -73,7 +73,8 @@ incomplete source will overwrite/remove secrets on the target worker.
 | DEVICE_TOKEN | Finance Convex env | Finance `/device/dashboard` (EXP32 desk display) | | | |
 | DEEPSEEK_API_KEY | Finance Convex env | Finance `convex/ai.ts` | | | |
 | Convex CLI access token | this Mac: `~/.convex/config.json` | Convex deploys from this machine | | | rotate via Convex dashboard / `npx convex login` |
-| Cloudflare API token (account) | shell env `CLOUDFLARE_API_TOKEN` | all wrangler deploys from this machine | | | set TTL at creation; verify with `bunx wrangler whoami` |
+| Cloudflare API token (account) | Infisical `/shared` → `CLOUDFLARE_API_TOKEN`; also shell env | all wrangler deploys from this machine | | | set TTL at creation; verify with `bunx wrangler whoami`. **Missing `Zone → Workers Routes: Edit`** — uploads the script then fails on route sync (half-finished deploy), verified on exp-crm 2026-08-06. The shell-exported copy is older/weaker still and shadows `wrangler login` — prefer the vault value |
+| Cloudflare API token (full) | Infisical `/shared` → `CLOUDFLARE_API_TOKEN_FULL` | wrangler deploys that touch zone routes or triggers (exp-crm, V2, Dash) | | | the working deploy token until the workers token's permissions are widened: `CLOUDFLARE_API_TOKEN="$(infisical secrets get CLOUDFLARE_API_TOKEN_FULL --env prod --path /shared --plain --silent)" bunx wrangler deploy --env=""` |
 | Supabase service key (EXP Vault) | Supabase project → Vercel env | EXP Vault backend | | | unverified — confirm location, then fill dates |
 | Vercel tokens | Vercel project envs | Finance + Vault frontends | | | unverified — confirm location, then fill dates |
 
