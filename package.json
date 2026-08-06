@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "deploy": "bun run build && wrangler deploy"
+    "deploy": "bun run build && wrangler deploy",
+    "secret-audit": "node scripts/secret-audit.mjs"
   },
   "dependencies": {
     "@paper-design/shaders-react": "0.0.76",
