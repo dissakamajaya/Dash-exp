@@ -115,3 +115,31 @@ Route: `dash.houseofexp.com/*` on zone `houseofexp.com`
 | `AUTH_MODE` | `access` / `local` | Auth strategy selector |
 
 Local secrets stored in `.dev.vars` (gitignored). Example in `.dev.vars.example`.
+
+## Browser automation (agent tasks)
+
+For ad-hoc browser tasks during a session — screenshots, one-off page renders,
+scraping/HTML extraction, checking how a URL looks — use Cloudflare Browser Run
+with **Kitesurf** instead of launching local Chromium/Puppeteer/Playwright:
+
+`$CLOUDFLARE_API_TOKEN` in the shell env is stale and lacks the Browser Run
+permission — pull the working token from Infisical instead
+(`/shared` → `CLOUDFLARE_API_TOKEN_FULL`, project `18c4abe3-2532-4755-af60-d7cc6624ce0d`):
+
+```bash
+CF_TOKEN=$(infisical secrets --env prod --recursive --plain --path /shared \
+  --projectId 18c4abe3-2532-4755-af60-d7cc6624ce0d | grep '^CLOUDFLARE_API_TOKEN_FULL=' | cut -d= -f2)
+
+curl -X POST "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/browser-run/screenshot?browser=kitesurf" \
+  -H "Authorization: Bearer $CF_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com"}' \
+  --output screenshot.png
+```
+
+For anything scriptable (Puppeteer/Playwright client, MCP), connect over CDP to
+`wss://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/browser-run/devtools/browser?browser=kitesurf`
+using the same `$CF_TOKEN`. Existing Puppeteer/Playwright/chrome-remote-interface
+code works unchanged, just add `browser=kitesurf` to the endpoint. Kitesurf is beta: not pixel-perfect and no
+persistent-auth-session support yet, so fall back to Browser Run's default
+(Chromium) for anything needing visual fidelity or a logged-in session.
