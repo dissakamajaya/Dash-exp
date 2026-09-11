@@ -159,7 +159,7 @@ export default function ShapeGrid({
   const idle = !hasSelectedDestination && hoveredIndex === null;
 
   return (
-    <div className="grid grid-cols-3 gap-x-3 gap-y-1 sm:gap-x-6 sm:gap-y-2 lg:flex lg:flex-nowrap lg:items-start lg:justify-center lg:gap-x-14 lg:gap-y-0">
+    <div className="grid grid-cols-3 gap-x-3 gap-y-1 sm:gap-x-6 sm:gap-y-2 lg:mx-auto lg:flex lg:w-[46rem] lg:flex-wrap lg:items-start lg:justify-center lg:gap-x-14 lg:gap-y-10">
       {items.map((item, index) => {
         const Shape = SHAPE_REGISTRY[item.shapeIndex];
         const hovered = hoveredIndex === item.shapeIndex;
