@@ -119,6 +119,17 @@ function CrmShape() {
   );
 }
 
+/** Command Center — cash planning trajectory. */
+function CommandCenterShape() {
+  return (
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="h-full w-full" aria-hidden="true">
+      <rect x="11" y="11" width="78" height="78" rx="20" fill="none" stroke="currentColor" strokeWidth="6" />
+      <path d="M28 67 L44 48 L57 57 L73 36" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="73" cy="36" r="7.5" fill="currentColor" />
+    </svg>
+  );
+}
+
 
 
 export const SHAPE_REGISTRY: Record<string, ComponentType> = {
@@ -130,6 +141,7 @@ export const SHAPE_REGISTRY: Record<string, ComponentType> = {
   research: ResearchShape,
   admin: AdminShape,
   crm: CrmShape,
+  commandcenter: CommandCenterShape,
 };
 
 export default function ShapeGrid({
