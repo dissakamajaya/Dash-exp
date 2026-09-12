@@ -143,3 +143,7 @@ using the same `$CF_TOKEN`. Existing Puppeteer/Playwright/chrome-remote-interfac
 code works unchanged, just add `browser=kitesurf` to the endpoint. Kitesurf is beta: not pixel-perfect and no
 persistent-auth-session support yet, so fall back to Browser Run's default
 (Chromium) for anything needing visual fidelity or a logged-in session.
+
+## Ecosystem contract
+
+Staff identity and data ownership are canonical in `exp-crm/worker/contracts.ts` — do not restate the lists here. Note: this gateway's login knows only aldi/dissa/bil; `ekky` is CRM-owner-only (recorded exception in the contract).
