@@ -93,11 +93,11 @@ describe("authenticated selector behavior", () => {
 
   test("renders coming-soon routes before authentication completes", () => {
     harness.stateValues[2] = null;
-    harness.stateValues[8] = "/rental";
+    harness.stateValues[8] = "/academy";
 
     const html = renderToStaticMarkup(<App />);
 
-    expect(html).toContain("Rental");
+    expect(html).toContain("Academy");
     expect(html).toContain("Segera hadir");
   });
   test("keeps active routes behind authentication", () => {

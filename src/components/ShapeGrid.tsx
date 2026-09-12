@@ -34,7 +34,7 @@ function JournalShape() {
   );
 }
 
-/** Rental (coming soon). */
+/** Rental. */
 function RentalShape() {
   return (
     <svg viewBox="248.21 170 112.583 77" xmlns="http://www.w3.org/2000/svg" className="h-full w-full" aria-hidden="true">

@@ -29,7 +29,7 @@ export type GatewayUser = {
 export const DESTINATIONS: Destination[] = [
   { id: "portal", name: "Portal", shapeIndex: "portal", accent: "#9360eb", route: "/portal", url: "https://client.houseofexp.com/admin", cue: "sparkle" },
   { id: "journal", name: "Journal", shapeIndex: "journal", accent: "#eb609f", route: "/journal", url: "https://finance.houseofexp.com/", cue: "tick" },
-  { id: "rental", name: "Rental", shapeIndex: "rental", accent: "#60bfeb", route: "/rental", url: "https://rental.houseofexp.com/", comingSoon: true, cue: "droplet" },
+  { id: "rental", name: "Rental", shapeIndex: "rental", accent: "#60bfeb", route: "/rental", url: "https://nah.houseofexp.com/", cue: "droplet" },
   { id: "studiostaff", name: "StudioStaff®", shapeIndex: "studiostaff", accent: "#eb9f60", route: "/studiostaff", url: "https://studio.houseofexp.com/", cue: "page" },
   { id: "academy", name: "Academy", shapeIndex: "academy", accent: "#ebcb60", route: "/academy", url: "https://academy.houseofexp.com/", comingSoon: true, cue: "chime" },
   { id: "research", name: "Research", shapeIndex: "research", accent: "#60ebd0", route: "/research", url: "", comingSoon: true, cue: "bloom" },
