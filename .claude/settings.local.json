@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/0xtx/Documents/GitHub/STUDIOSTAFF V2/**)",
+      "Bash(curl -s -m 3 http://127.0.0.1:29979/mcp -X POST -H \"Content-Type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"probe\",\"version\":\"0\"}}}')",
+      "Bash(echo \"exit: $?\")"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "paper"
+  ],
+  "enableAllProjectMcpServers": true
+}
