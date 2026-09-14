@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A React single-page gateway for the House of Exp ecosystem. Users select a destination shape, choose a staff identity from the login form, authenticate, then open one of eight ecosystem applications. Deployed on Cloudflare Workers with static asset serving.
+A React single-page gateway for the House of Exp ecosystem. Users select a destination shape, choose a staff identity from the login form, authenticate, then open one of the ecosystem applications registered in `src/data/gateway.ts` (destinations marked `comingSoon` show an in-page splash instead of redirecting). Deployed on Cloudflare Workers with static asset serving.
 
 ## Tech Stack
 

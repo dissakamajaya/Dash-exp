@@ -43,6 +43,7 @@ Seeded 2026-08-06 (prod):
 | `/staff-v2` | CRM_API_KEY | live value (V2 worker, deployed) |
 | `/finance` | CRM_READ_TOKEN | live value (Finance convex, pending) |
 | `/shared` | CLOUDFLARE_API_TOKEN (workers), CLOUDFLARE_API_TOKEN_R2_ZONE, CLOUDFLARE_API_TOKEN_FULL, R2_S3_ACCESS_KEY_ID, R2_S3_SECRET_ACCESS_KEY, VERCEL_TOKEN | live values |
+| `/shared` | ACADEMY_ACCESS_AUDIENCE (exp-academy worker secret) | live value — Access app "Academy Ops" (52d417f5-…), created 2026-09-13 |
 
 CLI access from any repo: `infisical init` (link once), then
 `infisical secrets --env prod --recursive --plain`. The working link lives in
@@ -62,7 +63,7 @@ incomplete source will overwrite/remove secrets on the target worker.
 |---|---|---|---|---|---|
 | STUDIO_STAFF_API_KEY / CRM_API_KEY | exp-crm: `wrangler secret put STUDIO_STAFF_API_KEY`; V2: `wrangler secret put CRM_API_KEY` | exp-crm ↔ STUDIOSTAFF V2 (project check + auto-create) | 2026-08-06 | 2026-11-04 | **LIVE end-to-end** 2026-08-06 — both workers deployed, Access `/api/crm` bypass added, existence check verified against real prod projects (id 4/5 → 200) |
 | FINANCE_API_TOKEN / CRM_READ_TOKEN | exp-crm: `wrangler secret put FINANCE_API_TOKEN`; Finance: `npx convex env set CRM_READ_TOKEN` | exp-crm ↔ STUDIOSTAFF-FINANCE (quotation existence check) | 2026-08-06 | 2026-11-04 | **LIVE on exp-crm** 2026-08-06; Finance side pending — `npx convex env set CRM_READ_TOKEN` blocked on Finance repo ledger drift |
-| ACCESS_AUDIENCE | Cloudflare Access app AUD, per worker secret (exp-crm, V2, Dash) | all apps behind Cloudflare Access | | | per-app; rotate by recreating the Access application |
+| ACCESS_AUDIENCE | Cloudflare Access app AUD, per worker secret (exp-crm, V2, Dash, exp-academy) | all apps behind Cloudflare Access | | | per-app; rotate by recreating the Access application |
 | SESSION_SECRET / LOCAL_SESSION_SECRET | exp-crm + Dash: dev `.dev.vars` / worker secrets | local dev sessions only | | | prod runs Access, so this stays dev-scoped |
 | INGEST_CRON_SECRET | exp-crm worker secret | exp-crm `/api/leads/ingest` admin route | | | |
 | EXP_VAULT_READ_KEY | V2 worker secret | exp-vault → V2 (`/api/exp-vault/projects`) | | | must match exp-vault's `STUDIOSTAFF_V2_API_KEY` |

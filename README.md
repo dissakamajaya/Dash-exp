@@ -14,10 +14,15 @@ The ecosystem includes the following applications:
 |---|-----|-----|------------|--------|
 | 1 | **Studio** | [studio.houseofexp.com](https://studio.houseofexp.com) | `STUDIOSTAFF V2` | Active |
 | 2 | **Finance** | [finance.houseofexp.com](https://finance.houseofexp.com) | `STUDIOSTAFF-FINANCE` | Active |
-| 3 | **Rental** | [nah.houseofexp.com](https://nah.houseofexp.com) | `ambient-house` | Active |
-| 4 | **Academy** | [academy.houseofexp.com](https://academy.houseofexp.com) | - | Coming Soon |
+| 3 | **NAH** | [nah.houseofexp.com](https://nah.houseofexp.com) | `ambient-house` | Active |
+| 4 | **Academy** | [academy.houseofexp.com](https://academy.houseofexp.com) | `exp-academy` | Active |
 | 5 | **Edit** | [houseofexp.com/edit/](https://houseofexp.com/edit/) | `website` | Active |
 | 6 | **Client** | [client.houseofexp.com](https://client.houseofexp.com) | `exp-vault` | Active |
+| 7 | **CRM** | [crm.houseofexp.com](https://crm.houseofexp.com) | `exp-crm` | Active |
+| 8 | **Command Center** | [cash.houseofexp.com](https://cash.houseofexp.com) | `EXP-Finance-Command-Center` | Active |
+
+Not deployed yet: **Research** (no URL, `comingSoon` in the registry). `studiostaff.houseofexp.com`
+(V1) and `rental.houseofexp.com` no longer route and must not be used.
 
 ### Repository Locations
 
@@ -28,7 +33,9 @@ The ecosystem includes the following applications:
 ├── STUDIOSTAFF-FINANCE/         # Finance app
 ├── ambient-house/               # Rental / merch / campaign ops (nah.houseofexp.com)
 ├── website/                     # Edit/CMS app
-└── exp-vault/                   # Client portal
+├── exp-vault/                   # Client portal
+├── exp-crm/                     # CRM
+└── EXP-Finance-Command-Center/  # Command Center (planning layer, not a ledger)
 ```
 
 ## Users

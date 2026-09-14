@@ -19,7 +19,7 @@ beforeEach(() => {
     removeItem: vi.fn(),
   });
   vi.stubGlobal("window", {
-    location: { hash: "#/rental", hostname: "localhost", assign: vi.fn() },
+    location: { hash: "#/nah", hostname: "localhost", assign: vi.fn() },
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     setTimeout,
@@ -31,7 +31,7 @@ describe("gateway route auth", () => {
     const html = renderToStaticMarkup(<App />);
 
     expect(html).toContain("Memeriksa sesi");
-    expect(html).not.toContain("Rental");
+    expect(html).not.toContain("nah.houseofexp.com");
     expect(html).not.toContain("Segera hadir");
   });
 
