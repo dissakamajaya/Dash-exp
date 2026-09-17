@@ -4,6 +4,7 @@ import { play } from "cuelume";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import ShapeGrid from "@/components/ShapeGrid";
 import SoundToggle from "@/components/SoundToggle";
+import InstallApp from "@/components/InstallApp";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useCuelume } from "@/hooks/useCuelume";
 import { getSession, localLogin, SessionError, type Session } from "@/lib/session";
@@ -287,6 +288,7 @@ export default function App() {
       <AnimatedBackground accent={activeAccent} dark={dark} />
       <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
       <SoundToggle enabled={soundEnabled} onToggle={toggleSound} dark={dark} />
+      <InstallApp />
 
       <main className="relative z-10 flex min-h-dvh items-center justify-center px-4 py-8 sm:py-10">
         <motion.div

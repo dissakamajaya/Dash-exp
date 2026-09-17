@@ -88,3 +88,23 @@ rotations (exit 1 when anything is overdue — CI/cron gate).
 ## License
 
 *To be determined*
+
+## Installable gateway (PWA)
+
+Dash can be installed as **EXP** using **Pasang aplikasi** or the browser's install
+menu. On iPhone/iPad, open Dash in Safari and choose **Bagikan → Tambah ke Layar
+Utama**. The installed gateway opens ecosystem destinations in the browser; those
+apps are separate origins and are not installed or cached by Dash.
+
+`public/manifest.webmanifest` defines the app identity and icons. Regenerate icons
+with `python3 scripts/generate-pwa-icons.py`. The manifest uses credentials because
+production is protected by Cloudflare Access. Install after signing in; an
+installed app may require its own initial login depending on the platform.
+
+`public/sw.js` caches only the data-free offline notice. All navigation stays
+network-first without storing HTML, and APIs, authentication endpoints, and other
+origins are never intercepted. Offline mode displays a reconnect action; it does
+not grant access to staff data or queue writes. Access session expiration and
+revocation remain enforced online. `_headers` makes PWA metadata and scripts
+revalidate. Browser QA should use a production build and the global Stagehand
+runner; verify service-worker activation, offline/reconnect, and install controls.
