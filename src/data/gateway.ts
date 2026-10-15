@@ -32,7 +32,7 @@ export const DESTINATIONS: Destination[] = [
   { id: "nah", name: "NAH", shapeIndex: "rental", accent: "#60bfeb", route: "/nah", url: "https://nah.houseofexp.com/", cue: "droplet" },
   { id: "studiostaff", name: "StudioStaff®", shapeIndex: "studiostaff", accent: "#eb9f60", route: "/studiostaff", url: "https://studio.houseofexp.com/", cue: "page" },
   { id: "academy", name: "Academy", shapeIndex: "academy", accent: "#ebcb60", route: "/academy", url: "https://academy.houseofexp.com/", cue: "chime" },
-  { id: "research", name: "Research", shapeIndex: "research", accent: "#60ebd0", route: "/research", url: "https://research-ops.houseofexp.com", cue: "bloom" },
+  { id: "research", name: "Research", shapeIndex: "research", accent: "#60ebd0", route: "/research", url: "https://research-ops.houseofexp.com/admin", cue: "bloom" },
   { id: "admin", name: "House Admin", shapeIndex: "admin", accent: "#6075eb", route: "/house-admin", url: "https://houseofexp.com/edit/", cue: "ready" },
   { id: "crm", name: "CRM", shapeIndex: "crm", accent: "#7deb60", route: "/crm", url: "https://crm.houseofexp.com", cue: "success" },
   { id: "assets", name: "Assets", shapeIndex: "assets", accent: "#b460eb", route: "/assets", url: "https://assets.houseofexp.com/", cue: "page" },
