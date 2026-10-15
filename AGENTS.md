@@ -64,9 +64,10 @@ The `shouldOfferLocalLogin()` helper in App.tsx detects when to show the local l
 | Rental | `rental` | rental.houseofexp.com | `#60bfeb` | Coming Soon |
 | StudioStaff® | `studiostaff` | studio.houseofexp.com | `#eb9f60` | Active |
 | Academy | `academy` | academy.houseofexp.com | `#ebcb60` | Coming Soon |
-| Research | `research` | — | `#60ebd0` | Coming Soon |
+| Research | `research` | research-ops.houseofexp.com | `#60ebd0` | Active |
 | House Admin | `admin` | houseofexp.com/edit/ | `#6075eb` | Active |
 | CRM | `crm` | crm.houseofexp.com | `#7deb60` | Active |
+| Assets | `assets` | assets.houseofexp.com | `#b460eb` | Active |
 
 ## Staff Users
 

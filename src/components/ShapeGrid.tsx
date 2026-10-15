@@ -74,7 +74,7 @@ function AcademyShape() {
   );
 }
 
-/** Research (coming soon). */
+/** Research. */
 function ResearchShape() {
   return (
     <svg viewBox="0 971.994 138.26 58.008" xmlns="http://www.w3.org/2000/svg" className="h-full w-full" aria-hidden="true">
@@ -130,6 +130,17 @@ function CommandCenterShape() {
   );
 }
 
+/** Assets — inventory crate and label. */
+function AssetsShape() {
+  return (
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="h-full w-full" aria-hidden="true">
+      <path d="M15 32 50 14l35 18-35 18-35-18Z" fill="none" stroke="currentColor" strokeWidth="5.5" strokeLinejoin="round" />
+      <path d="M15 32v37l35 18 35-18V32M50 50v37M32.5 23l35 18M32.5 41v20l17.5 9 17.5-9V41" fill="none" stroke="currentColor" strokeWidth="5.5" strokeLinejoin="round" />
+      <path d="M42 51h16v10H42z" fill="currentColor" />
+    </svg>
+  );
+}
+
 
 
 export const SHAPE_REGISTRY: Record<string, ComponentType> = {
@@ -142,6 +153,7 @@ export const SHAPE_REGISTRY: Record<string, ComponentType> = {
   admin: AdminShape,
   crm: CrmShape,
   commandcenter: CommandCenterShape,
+  assets: AssetsShape,
 };
 
 export default function ShapeGrid({

@@ -20,8 +20,9 @@ The ecosystem includes the following applications:
 | 6 | **Client** | [client.houseofexp.com](https://client.houseofexp.com) | `exp-vault` | Active |
 | 7 | **CRM** | [crm.houseofexp.com](https://crm.houseofexp.com) | `exp-crm` | Active |
 | 8 | **Command Center** | [cash.houseofexp.com](https://cash.houseofexp.com) | `EXP-Finance-Command-Center` | Active |
+| 9 | **Assets** | [assets.houseofexp.com](https://assets.houseofexp.com) | — | Active |
 
-Not deployed yet: **Research** (no URL, `comingSoon` in the registry). `studiostaff.houseofexp.com`
+**Research** is available at [research-ops.houseofexp.com](https://research-ops.houseofexp.com). `studiostaff.houseofexp.com`
 (V1) and `rental.houseofexp.com` no longer route and must not be used.
 
 ### Repository Locations

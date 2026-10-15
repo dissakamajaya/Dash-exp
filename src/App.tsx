@@ -6,8 +6,9 @@ import ShapeGrid from "@/components/ShapeGrid";
 import SoundToggle from "@/components/SoundToggle";
 import InstallApp from "@/components/InstallApp";
 import ThemeToggle from "@/components/ThemeToggle";
+import SessionMonitor from "@/components/SessionMonitor";
 import { useCuelume } from "@/hooks/useCuelume";
-import { getSession, localLogin, SessionError, type Session } from "@/lib/session";
+import { getSession, localLogin, logout, SessionError, type Session } from "@/lib/session";
 import {
   DESTINATIONS,
   STORAGE_KEY,
@@ -65,10 +66,13 @@ function readRoute() {
   return window.location.hash.slice(1).split("?")[0] || "/";
 }
 
+function isLocalHost(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
 export function shouldOfferLocalLogin(hostname: string, session: Session | null, authError: SessionError | null): boolean {
-  const localhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
   return (
-    localhost &&
+    isLocalHost(hostname) &&
     !session &&
     (authError?.code === "local_session_required" || authError?.code === "invalid_local_login")
   );
@@ -86,8 +90,10 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [authError, setAuthError] = useState<SessionError | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [sessionStatus, setSessionStatus] = useState<"checking" | "active" | "signed-out" | "unavailable">("checking");
   const [hoveredIndex, setHoveredIndex] = useState<string | null>(null);
   const [password, setPassword] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [route, setRoute] = useState(readRoute);
 
@@ -104,6 +110,7 @@ export default function App() {
     (value): value is string => value !== undefined,
   );
   const localLoginAvailable = shouldOfferLocalLogin(window.location.hostname, session, authError);
+  const localEnvironment = isLocalHost(window.location.hostname);
   const blockedByAuth = !authLoading && !session && authError && !localLoginAvailable;
 
   useEffect(() => {
@@ -129,13 +136,16 @@ export default function App() {
       .then((value) => {
         if (cancelled) return;
         setSession(value);
+        setSessionStatus("active");
         setAuthError(null);
         const saved = loadSelection();
         setSelection({ ...saved, userId: value.staffId });
       })
       .catch((error: unknown) => {
         if (cancelled) return;
-        setAuthError(sessionError(error));
+        const issue = sessionError(error);
+        setAuthError(issue);
+        setSessionStatus(issue.status === 401 || issue.status === 403 ? "signed-out" : "unavailable");
       })
       .finally(() => {
         if (!cancelled) setAuthLoading(false);
@@ -146,8 +156,45 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!session || authLoading) return;
+    let cancelled = false;
+
+    const check = async () => {
+      if (document.visibilityState === "hidden") return;
+      setSessionStatus("checking");
+      try {
+        const value = await getSession();
+        if (cancelled) return;
+        setSession(value);
+        setAuthError(null);
+        setSessionStatus("active");
+      } catch (error: unknown) {
+        if (cancelled) return;
+        const issue = sessionError(error);
+        setAuthError(issue);
+        if (issue.status === 401 || issue.status === 403) {
+          setSession(null);
+          setSessionStatus("signed-out");
+        } else {
+          setSessionStatus("unavailable");
+        }
+      }
+    };
+
+    const onFocus = () => { void check(); };
+    window.addEventListener("focus", onFocus);
+    const interval = window.setInterval(() => { void check(); }, 60_000);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      window.clearInterval(interval);
+    };
+  }, [session?.staffId, authLoading]);
+
   const selectItem = (item: Destination) => {
     play(item.cue);
+    setActionError(null);
     setAuthError((current) => (current?.code === "invalid_local_login" ? null : current));
     setSelection((current) => ({ ...current, appId: item.id }));
   };
@@ -167,28 +214,87 @@ export default function App() {
       setPassword("");
       return;
     }
-    window.open(app.url, "_blank");
     setLoading(false);
+  };
+
+  const manuallyCheckSession = async () => {
+    setSessionStatus("checking");
+    try {
+      const value = await getSession();
+      setSession(value);
+      setAuthError(null);
+      setSessionStatus("active");
+      setSelection((current) => ({ ...current, userId: value.staffId }));
+    } catch (error: unknown) {
+      const issue = sessionError(error);
+      setAuthError(issue);
+      if (issue.status === 401 || issue.status === 403) {
+        setSession(null);
+        setSessionStatus("signed-out");
+      } else {
+        setSessionStatus("unavailable");
+      }
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await logout();
+      setSession(null);
+      setSessionStatus("signed-out");
+      setAuthError(null);
+      setPassword("");
+      setSelection({ appId: null, userId: null });
+    } catch (error: unknown) {
+      setAuthError(sessionError(error));
+    }
   };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!selectedApp || !loginUser || (!session && !password)) return;
 
+    const destinationWindow = selectedApp.comingSoon ? null : window.open("about:blank", "_blank");
+    if (!selectedApp.comingSoon && !destinationWindow) {
+      setActionError("Izinkan pop-up untuk membuka aplikasi tujuan.");
+      return;
+    }
+    if (destinationWindow) destinationWindow.opener = null;
+
     play("loading");
     setLoading(true);
+    setActionError(null);
     setAuthError(null);
 
     try {
       if (!session) {
         const value = await localLogin(loginUser.id, password);
         setSession(value);
+        setSessionStatus("active");
         setSelection((current) => ({ ...current, userId: value.staffId }));
+      } else if (!selectedApp.comingSoon) {
+        const value = await getSession();
+        setSession(value);
+        setSessionStatus("active");
       }
 
-      continueToDestination(selectedApp!);
+      if (selectedApp.comingSoon) {
+        continueToDestination(selectedApp);
+      } else if (destinationWindow) {
+        play("success");
+        destinationWindow.location.replace(selectedApp.url);
+        setLoading(false);
+      }
     } catch (error: unknown) {
-      setAuthError(sessionError(error));
+      destinationWindow?.close();
+      const issue = sessionError(error);
+      setAuthError(issue);
+      if (issue.status === 401 || issue.status === 403) {
+        setSession(null);
+        setSessionStatus("signed-out");
+      } else {
+        setSessionStatus("unavailable");
+      }
       setLoading(false);
     }
   };
@@ -206,6 +312,7 @@ export default function App() {
       <div className="relative min-h-dvh w-full transition-colors duration-500" style={accentStyle}>
         <AnimatedBackground accent={activeAccent} dark={dark} />
         <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
+        <SessionMonitor session={session} status={sessionStatus} dark={dark} localAuth={localEnvironment} onCheck={manuallyCheckSession} onLogout={signOut} />
         <main className="relative z-10 flex min-h-dvh items-center justify-center px-6 text-center">
           <motion.div
               initial={{ opacity: 0, y: 14 }}
@@ -221,6 +328,16 @@ export default function App() {
             <p className="mt-4 max-w-sm text-pretty text-sm" style={{ color: dark ? "rgba(255,255,255,.52)" : "rgba(0,0,0,.52)" }}>
               {message}
             </p>
+            {!localLoginAvailable && (
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-6 rounded-full border px-4 py-2 text-xs transition-colors"
+                style={{ color: dark ? "#fff" : "#171717", borderColor: dark ? "rgba(255,255,255,.14)" : "rgba(0,0,0,.12)" }}
+              >
+                Masuk kembali
+              </button>
+            )}
           </motion.div>
         </main>
       </div>
@@ -236,6 +353,7 @@ export default function App() {
       <div className="relative min-h-dvh w-full" style={accentStyle}>
         <AnimatedBackground accent={routeApp.accent} dark={dark} />
         <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
+        <SessionMonitor session={session} status={sessionStatus} dark={dark} localAuth={localEnvironment} onCheck={manuallyCheckSession} onLogout={signOut} />
         <main className="relative z-10 flex min-h-dvh items-center justify-center px-6 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
@@ -287,6 +405,7 @@ export default function App() {
     >
       <AnimatedBackground accent={activeAccent} dark={dark} />
       <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
+      <SessionMonitor session={session} status={sessionStatus} dark={dark} localAuth={localEnvironment} onCheck={manuallyCheckSession} onLogout={signOut} />
       <SoundToggle enabled={soundEnabled} onToggle={toggleSound} dark={dark} />
       <InstallApp />
 
@@ -418,6 +537,11 @@ export default function App() {
                   {authError && localLoginAvailable && (
                     <p className="text-center text-xs" style={{ color: dark ? "rgba(255,255,255,.58)" : "rgba(0,0,0,.55)" }}>
                       {authError.message}
+                    </p>
+                  )}
+                  {actionError && (
+                    <p className="text-center text-xs" style={{ color: dark ? "rgba(255,255,255,.58)" : "rgba(0,0,0,.55)" }}>
+                      {actionError}
                     </p>
                   )}
                 </form>

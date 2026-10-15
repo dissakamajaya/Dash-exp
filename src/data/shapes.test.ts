@@ -8,4 +8,11 @@ describe("shape registry coverage", () => {
       expect(SHAPE_REGISTRY[destination.shapeIndex]).toBeDefined();
     }
   });
+
+  test("Research opens the research-ops app as an active destination", () => {
+    const research = DESTINATIONS.find((destination) => destination.id === "research");
+
+    expect(research?.url).toBe("https://research-ops.houseofexp.com");
+    expect(research?.comingSoon).toBeUndefined();
+  });
 });

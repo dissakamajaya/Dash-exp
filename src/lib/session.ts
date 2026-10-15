@@ -56,7 +56,11 @@ async function readSession(response: Response): Promise<Session> {
 }
 
 export async function getSession(): Promise<Session> {
-  const response = await fetch("/api/session", { credentials: "same-origin" });
+  const response = await fetch("/api/session", {
+    credentials: "same-origin",
+    cache: "no-store",
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+  });
   return readSession(response);
 }
 
