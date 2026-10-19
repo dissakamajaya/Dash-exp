@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties, type MouseEvent } from "react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { play } from "cuelume";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -85,6 +85,17 @@ function sessionError(error: unknown): SessionError {
 }
 
 export default function App() {
+  // Enter Dashboard plays its press-and-launch animation before navigating;
+  // modified clicks (new tab) and reduced motion go straight through. The class is
+  // set on the element directly so this adds no component state.
+  const enterDashboard = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.stopPropagation();
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.classList.add("is-launching");
+    const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 380;
+    window.setTimeout(() => window.location.assign("/overview/"), delay);
+  };
   const { soundEnabled, toggleSound } = useCuelume();
   const [dark, setDark] = useState(false);
   const [selection, setSelection] = useState<SavedSelection>({ appId: null, userId: null });
@@ -426,17 +437,18 @@ export default function App() {
 
           <a
             href="/overview/"
-            onClick={(event) => event.stopPropagation()}
-            className="group mx-auto mb-10 flex w-full max-w-[560px] items-center justify-between rounded-2xl px-5 py-4 text-left shadow-sm transition-transform duration-200 hover:-translate-y-0.5 sm:mb-14"
-            style={{ backgroundColor: dark ? "#f2f0ea" : "#151515", color: dark ? "#151515" : "#fff" }}
+            onClick={enterDashboard}
+            className="enter-glass"
           >
-            <span className="flex items-center gap-3">
-              <span className="size-2 rounded-full" style={{ backgroundColor: "var(--accent)" }} aria-hidden="true" />
-              <span className="text-base font-semibold">Enter Dashboard</span>
+            <span className="eg-label">
+              <span className="eg-dot" aria-hidden="true" />
+              Enter Dashboard
             </span>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="transition-transform duration-200 group-hover:translate-x-0.5">
-              <path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <span className="eg-arrow" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
           </a>
 
           <div>
