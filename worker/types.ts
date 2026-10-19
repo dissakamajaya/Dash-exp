@@ -14,8 +14,16 @@ export interface AccessBindings {
   LOCAL_SESSION_SECRET?: string;
 }
 
-type GeneratedEnv = Omit<Cloudflare.Env, keyof AccessBindings>;
-export type WorkerEnv = GeneratedEnv & AccessBindings;
+/** Founder overview (/overview/): read-only gateway token and Cloudflare analytics token, both Worker secrets. */
+export interface OverviewBindings {
+  EXP_GATEWAY_TOKEN?: string;
+  EXP_GATEWAY_ORIGIN?: string;
+  CF_ANALYTICS_TOKEN?: string;
+  CF_ACCOUNT_ID?: string;
+}
+
+type GeneratedEnv = Omit<Cloudflare.Env, keyof AccessBindings | keyof OverviewBindings>;
+export type WorkerEnv = GeneratedEnv & AccessBindings & OverviewBindings;
 
 export const STAFF_NAMES: Record<StaffId, string> = {
   aldi: "Pak Aldi",

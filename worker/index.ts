@@ -1,4 +1,5 @@
 import { getAccessIdentity } from "./access";
+import { handleOverview } from "./overview";
 import { assertLocalEndpoint, clearLocalSessionCookie, getLocalIdentity, verifyLocalLogin } from "./local-auth";
 import { AuthFailure, publicSession, type PublicSession, type StaffId, type WorkerEnv } from "./types";
 
@@ -77,6 +78,7 @@ export async function handleFetch(
   request: Request,
   env: WorkerEnv,
   assetsFetch: (request: Request) => Promise<Response>,
+  ctx?: Pick<ExecutionContext, "waitUntil">,
 ): Promise<Response> {
   const url = new URL(request.url);
 
@@ -84,6 +86,7 @@ export async function handleFetch(
     if (url.pathname === "/api/session") return await handleSession(request, env);
     if (url.pathname === "/api/session/login") return await handleLocalLogin(request, env);
     if (url.pathname === "/api/session/logout") return handleLocalLogout(request, env);
+    if (url.pathname === "/api/overview") return await handleOverview(request, env, { identify: readIdentity, ctx });
     return assetsFetch(request);
   } catch (error) {
     return failureResponse(error);
@@ -92,7 +95,7 @@ export async function handleFetch(
 
 
 export default {
-  async fetch(request: Request, env: WorkerEnv): Promise<Response> {
-    return handleFetch(request, env, (assetRequest) => env.ASSETS.fetch(assetRequest));
+  async fetch(request: Request, env: WorkerEnv, ctx?: ExecutionContext): Promise<Response> {
+    return handleFetch(request, env, (assetRequest) => env.ASSETS.fetch(assetRequest), ctx);
   },
 } satisfies ExportedHandler<WorkerEnv>;

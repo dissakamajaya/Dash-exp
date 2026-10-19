@@ -171,8 +171,8 @@ export default function ShapeGrid({
   const idle = !hasSelectedDestination && hoveredIndex === null;
 
   return (
-    <div className="grid grid-cols-3 gap-x-3 gap-y-1 sm:gap-x-6 sm:gap-y-2 lg:mx-auto lg:flex lg:w-[46rem] lg:flex-wrap lg:items-start lg:justify-center lg:gap-x-14 lg:gap-y-10">
-      {items.map((item, index) => {
+    <div className="mx-auto flex max-w-[720px] flex-wrap justify-center gap-x-2 gap-y-6 sm:gap-x-4 lg:gap-y-8">
+      {items.map((item) => {
         const Shape = SHAPE_REGISTRY[item.shapeIndex];
         const hovered = hoveredIndex === item.shapeIndex;
         const selected = selectedIndices.includes(item.shapeIndex);
@@ -180,7 +180,7 @@ export default function ShapeGrid({
         const anotherHovered = hoveredIndex !== null && !hovered;
 
         const muted = hasSelectedDestination && !selected;
-        const opacity = idle ? 0.16 : hovered ? 1 : selected ? 0.95 : muted ? 0.25 : anotherHovered ? 0.3 : 0.7;
+        const opacity = idle ? 0.82 : hovered ? 1 : selected ? 0.95 : muted ? 0.3 : anotherHovered ? 0.45 : 0.8;
 
         return (
           <motion.button
@@ -200,33 +200,23 @@ export default function ShapeGrid({
               event.stopPropagation();
               onSelect(item);
             }}
-            className="relative flex cursor-pointer items-center justify-center border-0 bg-transparent p-0 outline-none"
+            className="relative flex w-[96px] cursor-pointer flex-col items-center justify-start gap-2 border-0 bg-transparent p-0 outline-none sm:w-[128px]"
             animate={{
               opacity,
-              scale: idle ? [1, 1.018, 1] : hovered ? 1.08 : selected ? 1.025 : 1,
+              scale: hovered ? 1.06 : selected ? 1.025 : 1,
               color: selected ? (dark ? "#ffffff" : "#000000") : hovered ? item.accent : baseColor,
-              filter: idle
-                ? ["blur(1.2px) saturate(0.68)", "blur(2.4px) saturate(0.52)", "blur(1.2px) saturate(0.68)"]
-                : active
+              filter: active
                   ? `drop-shadow(0 0 12px ${item.accent}70)`
                   : muted
                     ? "blur(1.25px) saturate(0.7)"
                     : "none",
             }}
-            transition={
-              idle
-                ? {
-                    opacity: { duration: 0.2 },
-                    color: { duration: 0.2 },
-                    scale: { duration: 3.6, repeat: Infinity, ease: "easeInOut", delay: index * 0.12 },
-                    filter: { duration: 3.6, repeat: Infinity, ease: "easeInOut", delay: index * 0.12 },
-                  }
-                : { type: "spring", stiffness: 290, damping: 24 }
-            }
+            transition={{ type: "spring", stiffness: 290, damping: 24 }}
           >
-            <div className="relative aspect-square w-[78px] sm:w-[92px]">
+            <div className="relative aspect-square w-[64px] sm:w-[76px]">
               <Shape />
             </div>
+            <span className="text-[11px] font-medium tracking-wide sm:text-xs" style={{ color: "inherit" }}>{item.name}</span>
           </motion.button>
         );
       })}

@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties, type MouseEvent } from "react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { play } from "cuelume";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -6,6 +6,7 @@ import ShapeGrid from "@/components/ShapeGrid";
 import SoundToggle from "@/components/SoundToggle";
 import InstallApp from "@/components/InstallApp";
 import ThemeToggle from "@/components/ThemeToggle";
+import TopBar from "@/components/TopBar";
 import SessionMonitor from "@/components/SessionMonitor";
 import { useCuelume } from "@/hooks/useCuelume";
 import { getSession, localLogin, logout, SessionError, type Session } from "@/lib/session";
@@ -84,6 +85,17 @@ function sessionError(error: unknown): SessionError {
 }
 
 export default function App() {
+  // Enter Dashboard plays its press-and-launch animation before navigating;
+  // modified clicks (new tab) and reduced motion go straight through. The class is
+  // set on the element directly so this adds no component state.
+  const enterDashboard = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.stopPropagation();
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.classList.add("is-launching");
+    const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 380;
+    window.setTimeout(() => window.location.assign("/overview/"), delay);
+  };
   const { soundEnabled, toggleSound } = useCuelume();
   const [dark, setDark] = useState(false);
   const [selection, setSelection] = useState<SavedSelection>({ appId: null, userId: null });
@@ -311,8 +323,7 @@ export default function App() {
       <MotionConfig reducedMotion="user">
       <div className="relative min-h-dvh w-full transition-colors duration-500" style={accentStyle}>
         <AnimatedBackground accent={activeAccent} dark={dark} />
-        <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
-        <SessionMonitor session={session} status={sessionStatus} dark={dark} localAuth={localEnvironment} onCheck={manuallyCheckSession} onLogout={signOut} />
+        <TopBar left={<SessionMonitor session={session} status={sessionStatus} localAuth={localEnvironment} onCheck={manuallyCheckSession} onLogout={signOut} />} right=<ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} /> />
         <main className="relative z-10 flex min-h-dvh items-center justify-center px-6 text-center">
           <motion.div
               initial={{ opacity: 0, y: 14 }}
@@ -352,8 +363,7 @@ export default function App() {
       <MotionConfig reducedMotion="user">
       <div className="relative min-h-dvh w-full" style={accentStyle}>
         <AnimatedBackground accent={routeApp.accent} dark={dark} />
-        <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
-        <SessionMonitor session={session} status={sessionStatus} dark={dark} localAuth={localEnvironment} onCheck={manuallyCheckSession} onLogout={signOut} />
+        <TopBar left={<SessionMonitor session={session} status={sessionStatus} localAuth={localEnvironment} onCheck={manuallyCheckSession} onLogout={signOut} />} right=<ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} /> />
         <main className="relative z-10 flex min-h-dvh items-center justify-center px-6 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
@@ -403,20 +413,45 @@ export default function App() {
         style={accentStyle}
       onClick={clearSelection}
     >
-      <AnimatedBackground accent={activeAccent} dark={dark} />
-      <ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} />
-      <SessionMonitor session={session} status={sessionStatus} dark={dark} localAuth={localEnvironment} onCheck={manuallyCheckSession} onLogout={signOut} />
-      <SoundToggle enabled={soundEnabled} onToggle={toggleSound} dark={dark} />
-      <InstallApp />
+      <AnimatedBackground accent={activeAccent} dark={dark} quiet />
+      <TopBar
+        left={<SessionMonitor session={session} status={sessionStatus} localAuth={localEnvironment} onCheck={manuallyCheckSession} onLogout={signOut} />}
+        right={<><InstallApp /><SoundToggle enabled={soundEnabled} onToggle={toggleSound} /><ThemeToggle dark={dark} onToggle={() => setDark((value) => !value)} /></>}
+      />
 
-      <main className="relative z-10 flex min-h-dvh items-center justify-center px-4 py-8 sm:py-10">
+      <main className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[880px] flex-col justify-center px-5 pb-16 pt-24 sm:px-8">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: DURATION.medium, ease: EASE_OUT }}
-          className="w-full max-w-[470px] lg:max-w-[1200px]"
+          className="w-full"
         >
-          <div style={{ borderRadius: 24, overflow: "hidden" }}>
+          <header className="mb-8 text-center sm:mb-10">
+            <h1 className="text-balance text-3xl font-medium tracking-tight sm:text-4xl" style={{ color: dark ? "#fff" : "#171717" }}>
+              {session ? `Halo, ${session.name}` : "House of EXP"}
+            </h1>
+            <p className="mt-2 text-sm" style={{ color: dark ? "rgba(255,255,255,.5)" : "rgba(0,0,0,.5)" }}>
+              {new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" })}
+            </p>
+          </header>
+
+          <a
+            href="/overview/"
+            onClick={enterDashboard}
+            className="enter-glass"
+          >
+            <span className="eg-label">
+              <span className="eg-dot" aria-hidden="true" />
+              Enter Dashboard
+            </span>
+            <span className="eg-arrow" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          </a>
+
+          <div>
             <ShapeGrid
               items={DESTINATIONS}
               hoveredIndex={hoveredIndex}
@@ -436,7 +471,7 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: DURATION.medium, ease: EASE_OUT }}
-                className="mt-14 text-center text-pretty text-xs sm:mt-20"
+                className="mt-10 text-center text-pretty text-xs sm:mt-12"
                 style={{ color: dark ? "rgba(255,255,255,.4)" : "rgba(0,0,0,.42)" }}
               >
                 {selectedApp ? "Sesi staf diperlukan untuk melanjutkan" : "Pilih aplikasi tujuan untuk masuk"}
@@ -452,7 +487,7 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
                 transition={{ duration: DURATION.medium, ease: EASE_OUT }}
-                className="mt-14 sm:mt-20"
+                className="mt-10 sm:mt-12"
                 onClick={(event) => event.stopPropagation()}
               >
                 <form onSubmit={submit} className="mx-auto max-w-[320px] space-y-3">
