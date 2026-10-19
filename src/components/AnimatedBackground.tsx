@@ -5,6 +5,8 @@ import { type CSSProperties } from "react";
 interface Props {
   accent: string;
   dark: boolean;
+  /** Wash the gradient with the base colour so content reads first (landing page). */
+  quiet?: boolean;
 }
 
 /**
@@ -32,7 +34,7 @@ function mix(a: string, b: string, t: number): string {
 }
 
 
-export default function AnimatedBackground({ accent, dark }: Props) {
+export default function AnimatedBackground({ accent, dark, quiet = false }: Props) {
   const reducedMotion = useReducedMotion();
   const palette = dark
     ? ["#7c3cec", "#ec3c8b", "#3c56ec", "#3cecc9"]
@@ -79,6 +81,7 @@ export default function AnimatedBackground({ accent, dark }: Props) {
           transition: "background 500ms ease",
         }}
       />
+      {quiet && <div className="absolute inset-0" style={{ backgroundColor: base, opacity: dark ? 0.78 : 0.74 }} />}
     </div>
   );
 }

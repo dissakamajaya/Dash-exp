@@ -66,6 +66,8 @@ incomplete source will overwrite/remove secrets on the target worker.
 | ACCESS_AUDIENCE | Cloudflare Access app AUD, per worker secret (exp-crm, V2, Dash, exp-academy) | all apps behind Cloudflare Access | | | per-app; rotate by recreating the Access application |
 | SESSION_SECRET / LOCAL_SESSION_SECRET | exp-crm + Dash: dev `.dev.vars` / worker secrets | local dev sessions only | | | prod runs Access, so this stays dev-scoped |
 | INGEST_CRON_SECRET | exp-crm worker secret | exp-crm `/api/leads/ingest` admin route | | | |
+| EXP_GATEWAY_TOKEN | Dash worker secret: `wrangler secret put EXP_GATEWAY_TOKEN` | Dash `/api/overview` → api.houseofexp.com (agent gateway, read scopes) | 2026-10-18 | 2026-11-17 | agent credential expires 2026-11-17; renew with exp-agent-gateway `npm run agent:create`, then re-put |
+| CF_ANALYTICS_TOKEN | Dash worker secret: `wrangler secret put CF_ANALYTICS_TOKEN` | Dash `/api/overview` (zone + Web Analytics reads); same token as Research monitor `EXP_MONITOR_CF_TOKEN` | | | read-only Cloudflare analytics token |
 | EXP_VAULT_READ_KEY | V2 worker secret | exp-vault → V2 (`/api/exp-vault/projects`) | | | must match exp-vault's `STUDIOSTAFF_V2_API_KEY` |
 | STUDIOSTAFF_API_KEY | V2 worker secret | V2 → exp-vault (portfolio sync, agent route) | | | must match exp-vault's `STUDIOSTAFF_API_KEY` |
 | JWT_SECRET | V2 worker secret | V2 local-auth JWTs | | | fail-closed — worker refuses to run without it |
